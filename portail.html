@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Les Jeux de la Famille</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<meta name="theme-color" content="#1b1030">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1b1030; --panel:#2a1b4d; --panel-light:#35225e;
+    --coral:#ff5d73; --gold:#ffc857; --teal:#3ddc97; --blue:#5b8dee;
+    --text:#f6f2ff; --muted:#b8a9d9;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; background: radial-gradient(circle at 20% -10%, #3a2263 0%, var(--bg) 55%);
+    color:var(--text); font-family:'Inter',sans-serif; min-height:100vh; }
+  h1,h2,h3{ font-family:'Baloo 2',sans-serif; }
+  #app{ max-width:900px; margin:0 auto; padding:28px 20px 60px; }
+  .header{ text-align:center; margin-bottom:28px; }
+  .header img{ max-width:280px; width:100%; border-radius:20px; margin-bottom:14px; }
+  .header h1{ font-size: clamp(24px,5vw,34px); margin:0 0 6px; }
+  .header p{ color:var(--muted); margin:0; }
+
+  .game-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:18px; margin-top:24px; }
+  .game-card{ background:var(--panel); border:2px solid rgba(255,200,87,0.4); border-radius:22px; padding:26px 22px;
+    text-align:center; text-decoration:none; color:var(--text); display:block; transition:all .15s ease; position:relative; }
+  .game-card.live:hover{ border-color:var(--gold); transform:translateY(-3px); box-shadow:0 10px 24px rgba(0,0,0,0.35); }
+  .game-card.soon{ opacity:0.55; cursor:default; border-style:dashed; }
+  .game-card .emoji{ font-size:44px; margin-bottom:10px; }
+  .game-card h3{ margin:0 0 6px; font-size:20px; }
+  .game-card p{ margin:0; color:var(--muted); font-size:14px; }
+  .badge{ position:absolute; top:14px; right:14px; font-size:11px; font-weight:700; padding:3px 10px; border-radius:999px; }
+  .badge.live{ background:var(--teal); color:#0e2c22; }
+  .badge.soon{ background:var(--panel-light); color:var(--muted); }
+
+  footer{ text-align:center; color:var(--muted); font-size:13px; margin-top:40px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <img src="./logo.png" alt="Logo de la famille">
+    <h1>🎲 Les Jeux de la Famille</h1>
+    <p>Choisis un jeu pour commencer</p>
+  </div>
+  <div class="game-grid" id="gameGrid"></div>
+  <footer>Nouveau jeu à ajouter ? Édite la liste <code>GAMES</code> tout en haut du fichier.</footer>
+</div>
+
+<script>
+/* ==========================================================
+   Pour ajouter un nouveau jeu, ajoute simplement une ligne ici.
+   - name   : nom affiché
+   - desc   : petite description
+   - emoji  : icône
+   - url    : lien complet vers le jeu (laisse null si pas encore prêt)
+   ========================================================== */
+const GAMES = [
+  {
+    name: "Le Grand Quiz de la Tribu",
+    desc: "Le quiz familial en équipe, en solo ou en tournoi",
+    emoji: "🐼",
+    url: "https://maraisopossum.github.io/FamilleDeOuf/"
+  },
+  {
+    name: "Prochain jeu",
+    desc: "Bientôt disponible",
+    emoji: "🎯",
+    url: null
+  },
+  {
+    name: "Prochain jeu",
+    desc: "Bientôt disponible",
+    emoji: "🎲",
+    url: null
+  }
+];
+
+const grid = document.getElementById("gameGrid");
+grid.innerHTML = GAMES.map(g => {
+  const isLive = !!g.url;
+  const tag = isLive
+    ? `<a class="game-card live" href="${g.url}">`
+    : `<div class="game-card soon">`;
+  const closeTag = isLive ? "</a>" : "</div>";
+  return `
+    ${tag}
+      <span class="badge ${isLive ? 'live' : 'soon'}">${isLive ? 'Disponible' : 'Bientôt'}</span>
+      <div class="emoji">${g.emoji}</div>
+      <h3>${g.name}</h3>
+      <p>${g.desc}</p>
+    ${closeTag}
+  `;
+}).join("");
+</script>
+</body>
+</html>
