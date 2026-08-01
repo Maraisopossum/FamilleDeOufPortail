@@ -39,6 +39,7 @@ function topbarHtml(activeRoute) {
     { path: "/", label: "🏠 Accueil" },
     { path: "/quiz", label: "🐼 Quiz" },
     { path: "/naval", label: "🎯 Bataille navale" },
+    { path: "/connect4", label: "🔴 Puissance 4" },
     { path: "/historique", label: "📊 Historique" }
   ];
   return `
@@ -69,8 +70,8 @@ bindChangeProfileHandler(document.body, () => {
 const GAMES = [
   { name: "Le Grand Quiz de la Tribu", desc: "Le quiz familial en équipe, en solo ou en tournoi", emoji: "🐼", route: "/quiz" },
   { name: "La bataille navale de la tribu", desc: "Les bateaux ça Margaux connaît, la destruction aussi, à toi de jouer", emoji: "🎯", route: "/naval" },
-  { name: "Historique de la tribu", desc: "Tous les scores, tous les jeux confondus", emoji: "📊", route: "/historique" },
-  { name: "Prochain jeu", desc: "Bientôt disponible", emoji: "🎲", route: null }
+  { name: "Puissance 4 de la Tribu", desc: "Aligne 4 pions avant l'adversaire, en solo contre l'ordi ou en duel", emoji: "🔴", route: "/connect4" },
+  { name: "Historique de la tribu", desc: "Tous les scores, tous les jeux confondus", emoji: "📊", route: "/historique" }
 ];
 
 registerRoute("/", async (container) => {
@@ -140,6 +141,22 @@ registerRoute("/naval", async (container) => {
   }
   const mod = await import("./games/naval.js");
   return mod.mountNaval(mount, { onChangeProfile: () => { navigate("/naval"); } });
+});
+
+/* ============ PUISSANCE 4 ============ */
+registerRoute("/connect4", async (container) => {
+  container.innerHTML = topbarHtml("/connect4") + `<div id="gameMount"></div>`;
+  renderProfileBadge();
+  const mount = container.querySelector("#gameMount");
+  if (!getActiveProfile()) {
+    await renderProfilePicker(mount, () => { renderProfileBadge(); navigate("/connect4"); }, {
+      title: "Qui aligne les pions ?",
+      subtitle: "Choisis ton profil — il restera actif pour tous les jeux."
+    });
+    return;
+  }
+  const mod = await import("./games/connect4.js");
+  return mod.mountConnect4(mount, { onChangeProfile: () => { navigate("/connect4"); } });
 });
 
 registerRoute("__notfound__", null);
