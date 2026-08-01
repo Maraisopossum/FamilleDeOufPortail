@@ -1,13 +1,14 @@
 {
   "name": "Les Jeux de la Famille",
   "short_name": "Jeux Famille",
-  "description": "Portail d'accès aux jeux de la famille",
+  "description": "Le Grand Quiz de la Tribu et la Bataille Navale de la Tribu, réunis dans une seule appli familiale.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#1b1030",
   "theme_color": "#1b1030",
   "orientation": "portrait-primary",
+  "lang": "fr",
   "icons": [
     { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },

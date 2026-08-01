@@ -1,0 +1,110 @@
+/* ===== Palette et composants communs à toute l'app (portail + jeux) ===== */
+:root{
+  --bg:#1b1030; --panel:#2a1b4d; --panel-light:#35225e;
+  --coral:#ff5d73; --gold:#ffc857; --teal:#3ddc97; --blue:#5b8dee;
+  --text:#f6f2ff; --muted:#b8a9d9; --wrong:#ff5d73;
+}
+*{box-sizing:border-box;}
+html,body{ margin:0; padding:0; min-height:100vh;
+  background: radial-gradient(circle at 20% -10%, #3a2263 0%, var(--bg) 55%);
+  background-attachment:fixed;
+  color: var(--text); font-family:'Inter', sans-serif; overflow-x:hidden; }
+h1,h2,h3,.display{ font-family:'Baloo 2', sans-serif; }
+.hand,.scribble{ font-family:'Kalam', cursive; }
+#app{ max-width: 960px; margin: 0 auto; padding: 28px 20px 60px; min-height:100vh; display:flex; flex-direction:column; }
+
+/* ---------- barre du haut ---------- */
+.topbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 18px; flex-wrap:wrap; gap:10px; }
+.brand{ font-size: clamp(20px, 4vw, 28px); font-weight:800; letter-spacing: 0.5px; display:flex; align-items:center; gap:8px; }
+.brand span{ color: var(--gold); }
+.brand a{ color:inherit; text-decoration:none; }
+.topbar-right{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.round-badge{ background: var(--panel-light); border: 2px solid var(--gold); color: var(--gold); font-weight:700;
+  padding: 6px 16px; border-radius: 999px; font-size: 14px; white-space:nowrap; }
+.active-profile-badge{ font-size:13px; color:var(--muted); display:inline-flex; align-items:center; gap:4px; }
+
+.nav-links{ display:flex; gap:8px; flex-wrap:wrap; }
+.nav-links a{ color:var(--muted); text-decoration:none; font-size:14px; padding:6px 12px; border-radius:999px; background:var(--panel-light); }
+.nav-links a.active{ color:var(--bg); background:var(--gold); font-weight:700; }
+
+/* ---------- cartes / mise en page ---------- */
+.card{ background: var(--panel); border-radius: 24px; padding: 32px; box-shadow: 0 20px 60px rgba(0,0,0,0.4); margin-top: 20px; }
+.setup-title{ font-size: clamp(24px,5vw,36px); font-weight:800; margin:0 0 6px; }
+.setup-sub{ color: var(--muted); margin: 0 0 26px; font-size: 16px; line-height:1.5; }
+
+/* ---------- champs ---------- */
+input[type=text]{ background: var(--bg); border: 2px solid var(--panel-light); color: var(--text);
+  font-family:'Kalam', cursive; font-size: 18px; padding: 14px 16px; border-radius: 14px; outline:none; width:100%; }
+input[type=text]:focus{ border-color: var(--gold); }
+input.code-input{ text-transform:uppercase; letter-spacing: 6px; text-align:center; font-size:26px; }
+label.field-label{ display:block; font-size:13px; color:var(--muted); margin: 14px 0 6px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; }
+
+/* ---------- boutons ---------- */
+.btn{ font-family:'Baloo 2', sans-serif; font-weight:700; font-size: 18px; padding: 14px 28px; border-radius: 16px;
+  border:none; cursor:pointer; transition: transform .12s ease, box-shadow .12s ease; }
+.btn:active{ transform: scale(0.96); }
+.btn-primary{ background: var(--coral); color:#1b1030; box-shadow: 0 8px 0 #b83348; }
+.btn-gold{ background: var(--gold); color:#1b1030; box-shadow: 0 8px 0 #b5872c; }
+.btn-teal{ background: var(--teal); color:#0e2c22; box-shadow: 0 8px 0 #1e8f60; }
+.btn-ghost{ background: var(--panel-light); color: var(--text); box-shadow: 0 6px 0 #1c1338; }
+.btn-sm{ font-size:13px; padding:8px 14px; border-radius:10px; box-shadow:none; }
+.btn:disabled{ opacity:0.4; cursor:not-allowed; box-shadow:none; }
+.btn-row{ display:flex; gap:14px; flex-wrap:wrap; }
+.btn-block{ width:100%; text-align:center; }
+.back-link{ background:none; border:none; color: var(--muted); font-size:14px; cursor:pointer; text-decoration:underline; padding:0; }
+
+/* ---------- profils (partagé quiz/naval) ---------- */
+.profile-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(96px,1fr)); gap:10px; margin-bottom:14px; }
+.profile-card{ background: var(--panel); border: 2px solid var(--panel-light); border-radius: 14px; padding: 12px 8px;
+  text-align:center; cursor:pointer; transition: all .15s ease; }
+.profile-card:hover{ border-color: var(--gold); }
+.profile-card .avatar-letter{ width:38px; height:38px; margin:0 auto 6px; border-radius:50%; background: var(--panel-light);
+  color: var(--gold); font-family:'Baloo 2'; font-weight:800; font-size:16px; display:flex; align-items:center; justify-content:center; }
+.profile-card .pname{ font-size:13px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.profile-card.special .avatar-letter{ font-size:18px; background: var(--panel-light); }
+
+/* ---------- role / choix ---------- */
+.role-grid{ display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:22px; }
+.role-grid-3{ grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); }
+@media (max-width:600px){ .role-grid{ grid-template-columns:1fr; } }
+.role-card{ background: var(--panel); border: 2px solid rgba(255,200,87,0.4); border-radius: 22px; padding: 28px 22px;
+  text-align:center; cursor:pointer; transition: all .15s ease; }
+.role-card:hover{ border-color: var(--gold); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.35); }
+.role-card .emoji{ font-size: 46px; margin-bottom:10px; }
+.role-card h3{ margin: 0 0 6px; font-size:22px; }
+.role-card p{ color: var(--muted); font-size:14px; margin:0; }
+
+/* ---------- bannières / scoreboard partagés ---------- */
+.status-banner{ font-size:13px; color: var(--muted); text-align:center; margin-top:10px; }
+.config-warning{ background: rgba(255,93,115,0.15); border: 2px solid var(--coral); border-radius:16px;
+  padding:16px 18px; font-size:14px; color: var(--text); margin-top:18px; line-height:1.5; }
+.config-warning code{ background: rgba(0,0,0,0.3); padding:2px 6px; border-radius:6px; }
+
+.scoreboard{ margin-top: 20px; background: var(--panel); border-radius: 22px; padding: 22px; }
+.scoreboard h3{ margin:0 0 14px; font-size:15px; color: var(--muted); font-weight:700; letter-spacing:0.5px; text-transform:uppercase; }
+.player-cards{ display:flex; flex-wrap:wrap; gap: 12px; }
+.player-card{ background: var(--panel-light); border-radius: 14px; padding: 10px 16px; min-width: 120px; text-align:center; }
+.player-card.eliminated{ opacity:0.4; }
+.player-card .name{ font-family:'Kalam', cursive; font-size:16px; }
+.player-card .score{ font-family:'Baloo 2'; font-size: 22px; font-weight:800; color: var(--gold); }
+
+footer{ margin-top:auto; padding-top: 30px; text-align:center; color: var(--muted); font-size:13px; }
+
+/* ---------- accueil portail ---------- */
+.header{ text-align:center; margin-bottom:8px; }
+.header img{ max-width:220px; width:100%; border-radius:20px; margin-bottom:14px; }
+.header h1{ font-size: clamp(24px,5vw,34px); margin:0 0 6px; }
+.header p{ color:var(--muted); margin:0; }
+.game-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:18px; margin-top:24px; }
+.game-card{ background:var(--panel); border:2px solid rgba(255,200,87,0.4); border-radius:22px; padding:26px 22px;
+  text-align:center; text-decoration:none; color:var(--text); display:block; transition:all .15s ease; position:relative; cursor:pointer; }
+.game-card.live:hover{ border-color:var(--gold); transform:translateY(-3px); box-shadow:0 10px 24px rgba(0,0,0,0.35); }
+.game-card.soon{ opacity:0.55; cursor:default; border-style:dashed; }
+.game-card .emoji{ font-size:44px; margin-bottom:10px; }
+.game-card h3{ margin:0 0 6px; font-size:20px; }
+.game-card p{ margin:0; color:var(--muted); font-size:14px; }
+.badge{ position:absolute; top:14px; right:14px; font-size:11px; font-weight:700; padding:3px 10px; border-radius:999px; }
+.badge.live{ background:var(--teal); color:#0e2c22; }
+.badge.soon{ background:var(--panel-light); color:var(--muted); }
+
+canvas#confetti{ position:fixed; inset:0; pointer-events:none; z-index:50; }

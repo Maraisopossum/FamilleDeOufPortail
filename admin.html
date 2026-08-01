@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Questions du Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --bg:#1b1030; --panel:#2a1b4d; --panel-light:#35225e;
+    --coral:#ff5d73; --gold:#ffc857; --teal:#3ddc97; --blue:#5b8dee;
+    --text:#f6f2ff; --muted:#b8a9d9;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; }
+  h1,h2,h3{ font-family:'Baloo 2',sans-serif; }
+  #app{ max-width:1000px; margin:0 auto; padding:24px 18px 80px; }
+  .card{ background:var(--panel); border-radius:18px; padding:22px; margin-bottom:18px; }
+  h1{ font-size:26px; margin:0 0 6px; } h2{ font-size:17px; margin:0 0 12px; color:var(--gold); }
+  p.hint{ color:var(--muted); font-size:13px; line-height:1.5; margin:6px 0 14px; }
+  label{ display:block; font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; font-weight:700; margin:10px 0 4px; }
+  input[type=text], input[type=password], textarea, select{
+    width:100%; background:var(--bg); border:2px solid var(--panel-light); color:var(--text);
+    padding:10px 12px; border-radius:10px; font-family:'Inter'; font-size:14px; outline:none;
+  }
+  input:focus, textarea:focus, select:focus{ border-color:var(--gold); }
+  textarea{ resize:vertical; font-family:monospace; font-size:13px; }
+  .row{ display:flex; gap:12px; flex-wrap:wrap; }
+  .row > *{ flex:1; min-width:140px; }
+  button{ font-family:'Baloo 2'; font-weight:700; border:none; border-radius:10px; padding:10px 18px;
+    cursor:pointer; font-size:14px; }
+  .btn-primary{ background:var(--coral); color:#1b1030; }
+  .btn-gold{ background:var(--gold); color:#1b1030; }
+  .btn-teal{ background:var(--teal); color:#0e2c22; }
+  .btn-ghost{ background:var(--panel-light); color:var(--text); }
+  .btn-danger{ background:#c0334a; color:#fff; }
+  .btn-sm{ padding:6px 12px; font-size:12px; }
+  button:disabled{ opacity:0.4; cursor:not-allowed; }
+  .status{ font-size:13px; padding:10px 14px; border-radius:10px; margin-top:10px; display:none; white-space:pre-line; }
+  .status.ok{ background:rgba(61,220,151,0.15); border:1px solid var(--teal); color:var(--teal); display:block; }
+  .status.err{ background:rgba(255,93,115,0.15); border:1px solid var(--coral); color:var(--coral); display:block; }
+  .status.info{ background:rgba(91,141,238,0.15); border:1px solid var(--blue); color:var(--blue); display:block; }
+
+  .cat-header{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; background:var(--panel-light);
+    padding:12px 16px; border-radius:12px; margin-bottom:6px; cursor:pointer; }
+  .cat-header > div:first-child{ flex:1 1 200px; min-width:200px; }
+  .cat-header > div:last-child{ flex:1 1 auto; min-width:0; }
+  .cat-header .title{ font-weight:700; }
+  .cat-header .count{ color:var(--muted); font-size:13px; margin-left:8px; display:block; }
+  @media (max-width:520px){
+    .cat-header{ flex-direction:column; align-items:stretch; }
+    .cat-header > div:first-child{ flex:0 0 auto; min-width:0; }
+    .cat-header > div:last-child{ width:100%; }
+    .cat-header > div:last-child > select,
+    .cat-header > div:last-child > button{ width:100% !important; min-width:0 !important; }
+  }
+  .cat-body{ padding:6px 6px 14px; }
+  .q-row{ background:var(--bg); border-radius:12px; padding:14px; margin:8px 0; border:1px solid var(--panel-light); }
+  .q-row .opt-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px; }
+  @media (max-width:600px){ .q-row .opt-grid{ grid-template-columns:1fr; } }
+  .opt-item{ display:flex; align-items:center; gap:6px; }
+  .opt-item input[type=text]{ flex:1; }
+  .top-actions{ position:sticky; top:0; background:var(--bg); padding:10px 0; z-index:10; margin-bottom:6px; }
+  .counter{ font-size:13px; color:var(--muted); }
+  details.help{ margin-bottom:14px; }
+  details.help summary{ cursor:pointer; color:var(--gold); font-weight:700; font-size:13px; }
+  code{ background:rgba(0,0,0,0.3); padding:2px 6px; border-radius:6px; font-size:12px; }
+  .search-bar{ display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+  .search-bar input{ flex:2; min-width:180px; }
+  .search-bar select{ flex:1; min-width:160px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="card">
+    <h1>🛠️ Admin — Questions du Quiz</h1>
+    <p class="hint">Outil pour éditer, ajouter, importer en masse et supprimer des questions/catégories, sans jamais retoucher le JSON à la main. Cette page n'est pas reliée au jeu — garde son URL pour toi.</p>
+  </div>
+
+  <div class="card">
+    <h2>1. Connexion à Supabase</h2>
+    <p class="hint">Renseigné une fois, c'est sauvegardé sur cet appareil. Utilisée pour les questions ET les profils (même projet Supabase que ton jeu).</p>
+    <div class="row">
+      <div>
+        <label>URL du projet Supabase</label>
+        <input type="text" id="supaUrlInput" placeholder="https://xxxxx.supabase.co" value="https://ffiowczdhwudkmailhtp.supabase.co">
+      </div>
+      <div>
+        <label>Clé "anon public"</label>
+        <input type="password" id="supaKeyInput" placeholder="eyJhbGciOi..." value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmaW93Y3pkaHd1ZGttYWlsaHRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0NTM4ODcsImV4cCI6MjA5NzAyOTg4N30.Y0KYSPDTqZis2wmzOp2dyfYbYQAwIECxKdVNTNdDq4E">
+      </div>
+    </div>
+    <div class="row" style="margin-top:6px;">
+      <button class="btn-gold" onclick="loadFromSupabase()">📥 Charger les questions</button>
+      <button class="btn-ghost" onclick="document.getElementById('fileInput').click()">📂 Charger un fichier JSON local</button>
+      <input type="file" id="fileInput" accept="application/json" style="display:none;" onchange="loadFromFile(event)">
+    </div>
+    <div class="status" id="loadStatus"></div>
+
+    <details class="help" style="margin-top:16px;">
+      <summary>Migration unique depuis GitHub (si tu utilisais l'ancien questions.json)</summary>
+      <p class="hint">Ceci ne sert qu'une seule fois, pour transférer tes questions existantes vers Supabase.</p>
+      <div class="row">
+        <div>
+          <label>Propriétaire / Dépôt</label>
+          <input type="text" id="repoInput" placeholder="tonpseudo/quiz-famille">
+        </div>
+        <div>
+          <label>Branche</label>
+          <input type="text" id="branchInput" placeholder="main" value="main">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Chemin du fichier</label>
+          <input type="text" id="pathInput" placeholder="questions.json" value="questions.json">
+        </div>
+      </div>
+      <div class="row" style="margin-top:6px;">
+        <button class="btn-ghost" onclick="loadFromGitHub()">📥 Charger depuis GitHub</button>
+        <button class="btn-teal" onclick="pushLoadedQuestionsToSupabase()">📤 Envoyer ces questions vers Supabase</button>
+      </div>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2>👤 Gestion des profils (Supabase)</h2>
+    <p class="hint">Utilise la même connexion Supabase que ci-dessus.</p>
+    <div class="row" style="margin-top:6px;">
+      <button class="btn-gold" onclick="loadProfilesFromSupabase()">📥 Charger les profils</button>
+    </div>
+    <div class="status" id="profilesStatus"></div>
+    <div id="profilesListArea" style="margin-top:14px;"></div>
+    <div class="row" style="margin-top:14px;">
+      <input type="text" id="newProfileNameInput" placeholder="Nouveau prénom">
+      <button class="btn-teal" onclick="addProfileFromAdmin()">➕ Ajouter un profil</button>
+    </div>
+  </div>
+
+  <div id="workArea" style="display:none;">
+    <div class="card top-actions">
+      <div class="row">
+        <button class="btn-primary" onclick="saveToSupabase()" id="saveBtn">💾 Enregistrer sur Supabase</button>
+        <button class="btn-teal" onclick="downloadJson()">⬇️ Télécharger une sauvegarde JSON</button>
+      </div>
+      <div class="status" id="saveStatus"></div>
+      <p class="counter" id="totalCounter" style="margin-top:8px;"></p>
+    </div>
+
+
+    <div class="card">
+      <h2>2. Générer des questions avec l'IA</h2>
+      <p class="hint">Utilise ta propre clé API. Elle reste uniquement sur cet appareil, jamais envoyée ailleurs qu'au fournisseur choisi.</p>
+      <label>Fournisseur</label>
+      <select id="aiProviderSelect" onchange="onProviderChange()">
+        <option value="groq">Groq (Llama — gratuit, sans CB, rapide)</option>
+        <option value="gemini">Google Gemini</option>
+      </select>
+      <p class="hint" id="providerHint"></p>
+      <label>Clé API</label>
+      <input type="password" id="aiKeyInput" placeholder="gsk_...">
+      <label>Modèle</label>
+      <input type="text" id="aiModelInput" placeholder="llama-3.3-70b-versatile">
+      <div class="row" style="margin-top:6px;">
+        <div>
+          <label>Thème / catégorie</label>
+          <input type="text" id="aiThemeInput" placeholder="Ex : Musique des années 80">
+        </div>
+        <div>
+          <label>Nombre de questions</label>
+          <input type="text" id="aiCountInput" value="20">
+        </div>
+      </div>
+      <div class="row" style="margin-top:10px;">
+        <button class="btn-gold" onclick="generateWithAI()" id="aiGenerateBtn">✨ Générer</button>
+      </div>
+      <div class="status" id="aiStatus"></div>
+    </div>
+
+    <div class="card">
+      <h2>3. Ajouter des questions manuellement</h2>
+      <details class="help" open>
+        <summary>Ajout en masse depuis un texte ou un fichier</summary>
+        <p class="hint">
+          Une question par ligne, 8 champs séparés par <code>|</code> :<br>
+          <code>Catégorie|Question|Réponse A|Réponse B|Réponse C|Réponse D|IndexBonneRéponse(0-3)|Petit fait</code><br>
+          Exemple :<br>
+          <code>Cinéma|Qui réalise Titanic ?|James Cameron|Steven Spielberg|Ridley Scott|Peter Jackson|0|Sorti en 1997.</code>
+        </p>
+      </details>
+      <div class="row" style="margin-bottom:10px;">
+        <button class="btn-ghost btn-sm" onclick="downloadFormatTemplate()">📄 Télécharger le format d'import (.md)</button>
+      </div>
+      <textarea id="bulkText" rows="6" placeholder="Colle ici tes questions au format Catégorie|Question|A|B|C|D|IndexCorrect|Fait, une par ligne…"></textarea>
+      <div class="row" style="margin-top:8px;">
+        <button class="btn-gold" onclick="importBulkText()">📋 Analyser le texte collé</button>
+        <button class="btn-ghost" onclick="document.getElementById('bulkFileInput').click()">📂 Importer depuis un fichier .txt/.csv</button>
+        <input type="file" id="bulkFileInput" accept=".txt,.csv,text/plain" style="display:none;" onchange="importBulkFile(event)">
+      </div>
+      <div class="status" id="importStatus"></div>
+
+      <h2 style="margin-top:22px;">Ajouter une seule question</h2>
+      <label>Catégorie</label>
+      <input type="text" id="newCat" placeholder="Ex : Cinéma (catégorie existante ou nouvelle)">
+      <label>Question</label>
+      <input type="text" id="newQ" placeholder="Ta question ?">
+      <div class="opt-grid" style="margin-top:6px;">
+        <div class="opt-item"><input type="radio" name="newCorrect" value="0" checked><input type="text" id="newOptA" placeholder="Réponse A"></div>
+        <div class="opt-item"><input type="radio" name="newCorrect" value="1"><input type="text" id="newOptB" placeholder="Réponse B"></div>
+        <div class="opt-item"><input type="radio" name="newCorrect" value="2"><input type="text" id="newOptC" placeholder="Réponse C"></div>
+        <div class="opt-item"><input type="radio" name="newCorrect" value="3"><input type="text" id="newOptD" placeholder="Réponse D"></div>
+      </div>
+      <label>Petit fait (affiché après la révélation)</label>
+      <input type="text" id="newFact" placeholder="Un complément amusant ou explicatif">
+      <div class="row" style="margin-top:10px;">
+        <button class="btn-gold" onclick="addSingleQuestion()">➕ Ajouter cette question</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>4. Parcourir / éditer / supprimer</h2>
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="🔍 Rechercher dans les questions…" oninput="renderList()">
+        <select id="catFilter" onchange="renderList()"></select>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin-bottom:10px;cursor:pointer;">
+        <input type="checkbox" id="flaggedOnlyFilter" onchange="renderList()" style="width:auto;"> Afficher uniquement les questions signalées 🚩
+      </label>
+      <div id="listArea"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let questions = [];
+let expandedCats = new Set();
+
+const PRESET_GROUPS = ["Culture & savoirs","Pop culture & fandoms","Ambiance & détente","Spécial","Autres"];
+function getGroupForCat(cat){
+  const found = questions.find(q => q.cat === cat && q.group && q.group.trim());
+  return found ? found.group.trim() : "";
+}
+function allKnownGroups(){
+  const set = new Set(PRESET_GROUPS);
+  questions.forEach(q => { if(q.group && q.group.trim()) set.add(q.group.trim()); });
+  return [...set];
+}
+
+function getConfig(){
+  return {
+    owner_repo: document.getElementById("repoInput").value.trim(),
+    branch: document.getElementById("branchInput").value.trim() || "main",
+    path: document.getElementById("pathInput").value.trim() || "questions.json"
+  };
+}
+function saveConfigToStorage(){
+  const c = getConfig();
+  localStorage.setItem("quiz_admin_config", JSON.stringify(c));
+}
+function loadConfigFromStorage(){
+  try{
+    const saved = JSON.parse(localStorage.getItem("quiz_admin_config") || "null");
+    if(saved){
+      document.getElementById("repoInput").value = saved.owner_repo || "";
+      document.getElementById("branchInput").value = saved.branch || "main";
+      document.getElementById("pathInput").value = saved.path || "questions.json";
+    }
+  }catch(e){}
+}
+["repoInput","branchInput","pathInput"].forEach(id => {
+  window.addEventListener("DOMContentLoaded", () => {
+    document.getElementById(id).addEventListener("change", saveConfigToStorage);
+  });
+});
+window.addEventListener("DOMContentLoaded", loadConfigFromStorage);
+
+/* ============ GESTION DES PROFILS (Supabase) ============ */
+let supaClient = null;
+let profilesData = [];
+
+function getSupaConfig(){
+  return {
+    url: document.getElementById("supaUrlInput").value.trim(),
+    key: document.getElementById("supaKeyInput").value.trim()
+  };
+}
+function saveSupaConfigToStorage(){
+  const c = getSupaConfig();
+  localStorage.setItem("quiz_admin_supabase_config", JSON.stringify(c));
+}
+function loadSupaConfigFromStorage(){
+  try{
+    const saved = JSON.parse(localStorage.getItem("quiz_admin_supabase_config") || "null");
+    if(saved){
+      document.getElementById("supaUrlInput").value = saved.url || "";
+      document.getElementById("supaKeyInput").value = saved.key || "";
+    }
+  }catch(e){}
+}
+window.addEventListener("DOMContentLoaded", () => {
+  loadSupaConfigFromStorage();
+  ["supaUrlInput","supaKeyInput"].forEach(id => {
+    document.getElementById(id).addEventListener("change", saveSupaConfigToStorage);
+  });
+});
+
+function ensureSupaClient(){
+  const c = getSupaConfig();
+  if(!c.url || !c.key){
+    showStatus("profilesStatus","err","❌ Renseigne l'URL et la clé anon Supabase (les mêmes que dans index.html).");
+    return null;
+  }
+  if(!supaClient){
+    supaClient = window.supabase.createClient(c.url, c.key);
+  }
+  return supaClient;
+}
+
+const AVATAR_CHOICES = ["😀","😎","🤓","🥳","🦁","🐼","🐵","🐸","🦊","🐯","🦄","🐙","🐷","🐨","🐻","🦉","🐧","🐳","🌟","🔥","⚡","🎯","🎮","🚒"];
+
+window.loadProfilesFromSupabase = async function(){
+  const client = ensureSupaClient();
+  if(!client) return;
+  showStatus("profilesStatus","info","Chargement en cours…");
+  try{
+    const { data, error } = await client.from("profiles").select("name, avatar").order("name");
+    if(error) throw error;
+    profilesData = data.map(r => ({ name: r.name, avatar: r.avatar || "" }));
+    showStatus("profilesStatus","ok", `✅ ${profilesData.length} profil(s) chargé(s).`);
+    renderProfilesList();
+  }catch(err){
+    showStatus("profilesStatus","err","❌ " + (err.message || "erreur") + " — as-tu bien créé la table « profiles » (voir supabase-profiles-setup.sql) ?");
+  }
+};
+
+function renderProfilesList(){
+  const el = document.getElementById("profilesListArea");
+  if(profilesData.length === 0){
+    el.innerHTML = `<p class="hint">Aucun profil pour l'instant.</p>`;
+    return;
+  }
+  el.innerHTML = profilesData.map((p, idx) => `
+    <div class="q-row">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="font-size:22px;">${p.avatar || "👤"}</span>
+        <input type="text" value="${escAttr(p.name)}" data-idx="${idx}" data-action="rename-input" style="flex:2;min-width:160px;">
+        <button class="btn-gold btn-sm" data-action="rename-profile" data-idx="${idx}">✏️ Renommer</button>
+        <button class="btn-danger btn-sm" data-action="delete-profile" data-name="${escAttr(p.name)}">🗑️ Supprimer</button>
+      </div>
+      <div class="row" style="margin-top:8px;flex-wrap:wrap;gap:4px;">
+        ${AVATAR_CHOICES.map(a => `
+          <button class="btn btn-sm" data-action="set-avatar" data-idx="${idx}" data-avatar="${a}"
+            style="padding:4px 8px;font-size:18px;background:${p.avatar===a?'var(--gold)':'var(--panel-light)'};">${a}</button>
+        `).join("")}
+      </div>
+    </div>
+  `).join("");
+}
+
+document.getElementById("profilesListArea").addEventListener("click", async function(e){
+  const renameBtn = e.target.closest('[data-action="rename-profile"]');
+  if(renameBtn){
+    const idx = parseInt(renameBtn.dataset.idx, 10);
+    const oldName = profilesData[idx].name;
+    const input = e.currentTarget.querySelector(`input[data-idx="${idx}"]`);
+    const newName = input.value.trim();
+    if(!newName || newName === oldName) return;
+    const client = ensureSupaClient();
+    if(!client) return;
+    showStatus("profilesStatus","info","Renommage en cours…");
+    try{
+      const { error } = await client.from("profiles").update({ name: newName }).eq("name", oldName);
+      if(error) throw error;
+      profilesData[idx].name = newName;
+      showStatus("profilesStatus","ok", `✅ « ${oldName} » renommé en « ${newName} ». Les anciennes parties dans l'historique restent sous l'ancien nom.`);
+      renderProfilesList();
+    }catch(err){
+      showStatus("profilesStatus","err","❌ " + (err.message||"erreur lors du renommage"));
+    }
+    return;
+  }
+  const deleteBtn = e.target.closest('[data-action="delete-profile"]');
+  if(deleteBtn){
+    const name = deleteBtn.dataset.name;
+    if(!confirm(`Supprimer le profil « ${name} » ? Son historique de parties restera dans la base, mais il n'apparaîtra plus dans la liste des profils du jeu (sauf si tu le recrées avec le même prénom).`)) return;
+    const client = ensureSupaClient();
+    if(!client) return;
+    showStatus("profilesStatus","info","Suppression en cours…");
+    try{
+      const { error } = await client.from("profiles").delete().eq("name", name);
+      if(error) throw error;
+      profilesData = profilesData.filter(p => p.name !== name);
+      showStatus("profilesStatus","ok", `✅ « ${name} » supprimé.`);
+      renderProfilesList();
+    }catch(err){
+      showStatus("profilesStatus","err","❌ " + (err.message||"erreur") + " — as-tu bien exécuté supabase-profiles-delete-policy.sql ?");
+    }
+    return;
+  }
+  const avatarBtn = e.target.closest('[data-action="set-avatar"]');
+  if(avatarBtn){
+    const idx = parseInt(avatarBtn.dataset.idx, 10);
+    const avatar = avatarBtn.dataset.avatar;
+    const name = profilesData[idx].name;
+    const client = ensureSupaClient();
+    if(!client) return;
+    try{
+      const { error } = await client.from("profiles").update({ avatar }).eq("name", name);
+      if(error) throw error;
+      profilesData[idx].avatar = avatar;
+      renderProfilesList();
+    }catch(err){
+      showStatus("profilesStatus","err","❌ " + (err.message||"erreur") + " — as-tu bien exécuté supabase-profiles-add-avatar.sql ?");
+    }
+    return;
+  }
+});
+
+window.addProfileFromAdmin = async function(){
+  const input = document.getElementById("newProfileNameInput");
+  const name = input.value.trim();
+  if(!name) return;
+  const client = ensureSupaClient();
+  if(!client) return;
+  showStatus("profilesStatus","info","Ajout en cours…");
+  try{
+    const { error } = await client.from("profiles").upsert({ name }, { onConflict: "name" });
+    if(error) throw error;
+    if(!profilesData.some(p => p.name === name)) profilesData.push({ name, avatar: "" });
+    profilesData.sort((a,b) => a.name.localeCompare(b.name));
+    input.value = "";
+    showStatus("profilesStatus","ok", `✅ Profil « ${name} » ajouté.`);
+    renderProfilesList();
+  }catch(err){
+    showStatus("profilesStatus","err","❌ " + (err.message||"erreur lors de l'ajout"));
+  }
+};
+
+
+function showStatus(elId, type, msg){
+  const el = document.getElementById(elId);
+  el.className = "status " + type;
+  el.textContent = msg;
+}
+
+async function loadFromGitHub(){
+  const c = getConfig();
+  if(!c.owner_repo.includes("/")){
+    showStatus("loadStatus","err","Format attendu : proprietaire/depot (ex: tonpseudo/quiz-famille)");
+    return;
+  }
+  showStatus("loadStatus","info","Chargement en cours…");
+  try{
+    const url = `https://api.github.com/repos/${c.owner_repo}/contents/${encodeURIComponent(c.path)}?ref=${encodeURIComponent(c.branch)}`;
+    const res = await fetch(url, { headers: { "Accept": "application/vnd.github+json" } });
+    if(!res.ok) throw new Error("Réponse GitHub : " + res.status + " — vérifie propriétaire/dépôt/branche/chemin, et que le dépôt est public.");
+    const data = await res.json();
+    const decoded = decodeURIComponent(escape(atob(data.content.replace(/\n/g,""))));
+    questions = JSON.parse(decoded);
+    originalQuestionIds = [];
+    showStatus("loadStatus","ok", `✅ ${questions.length} questions chargées depuis GitHub. Clique maintenant sur « Envoyer ces questions vers Supabase » ci-dessus.`);
+    document.getElementById("workArea").style.display = "block";
+    renderList();
+  }catch(err){
+    showStatus("loadStatus","err","❌ " + err.message);
+  }
+}
+
+function loadFromFile(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try{
+      questions = JSON.parse(e.target.result);
+      originalQuestionIds = [];
+      showStatus("loadStatus","ok", `✅ ${questions.length} questions chargées depuis le fichier local. Clique sur « Enregistrer sur Supabase » pour les y ajouter.`);
+      document.getElementById("workArea").style.display = "block";
+      renderList();
+    }catch(err){
+      showStatus("loadStatus","err","❌ Fichier JSON invalide : " + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function chunkArray(arr, size){
+  const out = [];
+  for(let i=0;i<arr.length;i+=size) out.push(arr.slice(i, i+size));
+  return out;
+}
+
+let originalQuestionIds = [];
+
+window.loadFromSupabase = async function(){
+  const client = ensureSupaClient();
+  if(!client){ showStatus("loadStatus","err","❌ Renseigne l'URL et la clé Supabase ci-dessus."); return; }
+  showStatus("loadStatus","info","Chargement des questions depuis Supabase…");
+  try{
+    let all = [];
+    let from = 0;
+    const pageSize = 1000;
+    while(true){
+      const { data, error } = await client.from("questions").select("*").range(from, from + pageSize - 1).order("id");
+      if(error) throw error;
+      all = all.concat(data);
+      if(!data || data.length < pageSize) break;
+      from += pageSize;
+    }
+    questions = all.map(r => ({
+      id: r.id, cat: r.cat, q: r.q, opts: r.opts, correct: r.correct, fact: r.fact || "",
+      group: r.group_name || "", flagged: !!r.flagged, flag_note: r.flag_note || ""
+    }));
+    originalQuestionIds = questions.map(q => q.id);
+    showStatus("loadStatus","ok", `✅ ${questions.length} questions chargées depuis Supabase.`);
+    document.getElementById("workArea").style.display = "block";
+    renderList();
+  }catch(err){
+    showStatus("loadStatus","err","❌ " + (err.message||"erreur") + " — as-tu bien créé la table « questions » (voir supabase-questions-setup.sql) ?");
+  }
+};
+
+window.pushLoadedQuestionsToSupabase = async function(){
+  const client = ensureSupaClient();
+  if(!client){ showStatus("loadStatus","err","❌ Renseigne l'URL et la clé Supabase ci-dessus."); return; }
+  if(!questions.length){ showStatus("loadStatus","err","❌ Charge d'abord des questions depuis GitHub ou un fichier local."); return; }
+  showStatus("loadStatus","info", `Envoi de ${questions.length} questions vers Supabase…`);
+  try{
+    const payload = questions.map(q => ({
+      cat: q.cat, q: q.q, opts: q.opts, correct: q.correct, fact: q.fact || null, group_name: q.group || null
+    }));
+    for(const chunk of chunkArray(payload, 300)){
+      const { error } = await client.from("questions").insert(chunk);
+      if(error) throw error;
+    }
+    showStatus("loadStatus","ok", `✅ ${questions.length} questions envoyées vers Supabase !`);
+    await loadFromSupabase();
+  }catch(err){
+    showStatus("loadStatus","err","❌ " + (err.message||"erreur lors de l'envoi vers Supabase"));
+  }
+};
+
+window.saveToSupabase = async function(){
+  const client = ensureSupaClient();
+  if(!client){ showStatus("saveStatus","err","❌ Renseigne l'URL et la clé Supabase en haut de la page."); return; }
+  const btn = document.getElementById("saveBtn");
+  btn.disabled = true;
+  showStatus("saveStatus","info", `Enregistrement de ${questions.length} questions en cours…`);
+  try{
+    const payload = questions.map(q => ({
+      cat: q.cat, q: q.q, opts: q.opts, correct: q.correct, fact: q.fact || null, group_name: q.group || null,
+      flagged: !!q.flagged, flag_note: q.flag_note || null
+    }));
+    const newIds = [];
+    for(const chunk of chunkArray(payload, 300)){
+      const { data, error } = await client.from("questions").insert(chunk).select("id");
+      if(error) throw error;
+      data.forEach(r => newIds.push(r.id));
+    }
+    // L'insertion de la nouvelle version a réussi : on peut supprimer l'ancienne génération sans risque.
+    const oldIds = originalQuestionIds.filter(id => id !== undefined && id !== null);
+    for(const idChunk of chunkArray(oldIds, 300)){
+      const { error } = await client.from("questions").delete().in("id", idChunk);
+      if(error) throw error;
+    }
+    showStatus("saveStatus","ok", `✅ ${questions.length} questions enregistrées sur Supabase !`);
+    await loadFromSupabase();
+  }catch(err){
+    showStatus("saveStatus","err","❌ Échec de l'enregistrement : " + (err.message||"erreur") + " — tes questions restent affichées ici, tu peux retenter.");
+  }finally{
+    btn.disabled = false;
+  }
+};
+
+function downloadJson(){
+  const blob = new Blob([JSON.stringify(questions, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "questions.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+window.downloadFormatTemplate = function(){
+  const content = `# Format d'export pour le Quiz de la Tribu
+
+Génère des questions de quiz à choix multiples en français, au format suivant : **une question par ligne**, avec exactement **8 champs séparés par le caractère \`|\`** (pipe), dans cet ordre :
+
+\`\`\`
+Catégorie|Question|Réponse A|Réponse B|Réponse C|Réponse D|IndexBonneRéponse|Petit fait
+\`\`\`
+
+## Règles
+
+- **Catégorie** : le thème de la question (identique pour tout un lot si un seul thème est demandé)
+- **Question** : la question complète, avec point d'interrogation
+- **Réponse A/B/C/D** : les 4 réponses possibles, une seule est correcte
+- **IndexBonneRéponse** : un chiffre entre **0 et 3** indiquant quelle réponse est correcte (0 = Réponse A, 1 = B, 2 = C, 3 = D) — jamais la réponse elle-même, juste son index
+- **Petit fait** : une phrase courte (1-2 phrases) affichée après la révélation, qui complète ou explique la réponse
+
+## Contraintes strictes
+
+- Aucun champ ne doit contenir le caractère \`|\`
+- Une question par ligne, pas de retour à la ligne à l'intérieur d'un champ
+- Pas de guillemets, de markdown ou de numérotation en début de ligne
+- Public familial (11 à 40 ans), pas de contenu violent, sexuel ou offensant
+- Ne pas reproduire de paroles de chansons ni de texte protégé mot pour mot
+- Reste factuellement fiable ; en cas de doute sur un détail précis, choisis une question plus générale plutôt que d'inventer un fait
+
+## Exemple
+
+\`\`\`
+Cinéma|Qui réalise le film Titanic sorti en 1997 ?|James Cameron|Steven Spielberg|Ridley Scott|Peter Jackson|0|Le film a remporté 11 Oscars, dont celui du meilleur film.
+\`\`\`
+
+## Utilisation
+
+1. Colle ces instructions dans n'importe quel chat IA (ou utilise le générateur Gemini intégré à cet outil)
+2. Précise le thème souhaité et le nombre de questions (ex. « 200 questions sur le thème X, dans ce format »)
+3. Récupère le résultat dans un fichier \`.txt\`
+4. Importe-le directement dans cet outil via « 📂 Importer depuis un fichier .txt/.csv »
+`;
+  const blob = new Blob([content], { type: "text/markdown" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "format-import-questions.md";
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+function parseBulkText(text){
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+  const parsed = []; const errors = [];
+  lines.forEach((line, i) => {
+    const parts = line.split("|").map(p => p.trim());
+    if(parts.length !== 8){
+      errors.push(`Ligne ${i+1} : ${parts.length} champ(s) trouvé(s) au lieu de 8`);
+      return;
+    }
+    const [cat, q, a, b, c, d, correctStr, fact] = parts;
+    const correct = parseInt(correctStr, 10);
+    if(!cat || !q || !a || !b || !c || !d){
+      errors.push(`Ligne ${i+1} : un champ obligatoire est vide`);
+      return;
+    }
+    if(isNaN(correct) || correct < 0 || correct > 3){
+      errors.push(`Ligne ${i+1} : index de bonne réponse invalide ("${correctStr}"), doit être 0, 1, 2 ou 3`);
+      return;
+    }
+    parsed.push({ cat, q, opts: [a,b,c,d], correct, fact: fact || "" });
+  });
+  return { parsed, errors };
+}
+function importBulkText(){
+  const text = document.getElementById("bulkText").value;
+  runBulkImport(text);
+}
+function importBulkFile(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => runBulkImport(e.target.result);
+  reader.readAsText(file);
+}
+function runBulkImport(text){
+  const { parsed, errors } = parseBulkText(text);
+  questions.push(...parsed);
+  let msg = `✅ ${parsed.length} question(s) ajoutée(s).`;
+  if(errors.length){
+    msg += ` ⚠️ ${errors.length} ligne(s) ignorée(s) :\n` + errors.slice(0,8).join("\n");
+    if(errors.length > 8) msg += `\n… et ${errors.length-8} de plus.`;
+    showStatus("importStatus","err",msg);
+  } else {
+    showStatus("importStatus","ok",msg);
+  }
+  document.getElementById("bulkText").value = "";
+  renderList();
+}
+
+/* ============ GÉNÉRATION VIA IA (Groq ou Gemini) ============ */
+const AI_PROVIDERS = {
+  groq: {
+    label: "Groq",
+    defaultModel: "llama-3.3-70b-versatile",
+    keyPlaceholder: "gsk_...",
+    keyStorageKey: "quiz_admin_groq_key",
+    modelStorageKey: "quiz_admin_groq_model",
+    hint: "Gratuit, sans carte bancaire. Crée ta clé sur console.groq.com/keys (compte Google/GitHub/email)."
+  },
+  gemini: {
+    label: "Gemini",
+    defaultModel: "gemini-2.0-flash",
+    keyPlaceholder: "AIza...",
+    keyStorageKey: "quiz_admin_gemini_key",
+    modelStorageKey: "quiz_admin_gemini_model",
+    hint: "Nécessite qu'un compte de facturation soit lié à ton projet Google Cloud pour débloquer le quota gratuit. Clé sur aistudio.google.com/apikey."
+  }
+};
+
+window.onProviderChange = function(){
+  const providerKey = document.getElementById("aiProviderSelect").value;
+  const p = AI_PROVIDERS[providerKey];
+  document.getElementById("providerHint").textContent = p.hint;
+  document.getElementById("aiKeyInput").placeholder = p.keyPlaceholder;
+  document.getElementById("aiKeyInput").value = localStorage.getItem(p.keyStorageKey) || "";
+  document.getElementById("aiModelInput").placeholder = p.defaultModel;
+  document.getElementById("aiModelInput").value = localStorage.getItem(p.modelStorageKey) || p.defaultModel;
+};
+
+window.addEventListener("DOMContentLoaded", () => {
+  onProviderChange();
+  document.getElementById("aiKeyInput").addEventListener("change", function(){
+    const p = AI_PROVIDERS[document.getElementById("aiProviderSelect").value];
+    localStorage.setItem(p.keyStorageKey, this.value.trim());
+  });
+  document.getElementById("aiModelInput").addEventListener("change", function(){
+    const p = AI_PROVIDERS[document.getElementById("aiProviderSelect").value];
+    localStorage.setItem(p.modelStorageKey, this.value.trim());
+  });
+});
+
+function buildQuizPrompt(theme, count){
+  return `Tu es un générateur de questions de quiz familial en français.
+
+Génère exactement ${count} questions de quiz à choix multiples sur le thème suivant : "${theme}".
+
+Réponds UNIQUEMENT avec les questions, une par ligne, sans aucune phrase d'introduction, de conclusion, de numérotation ni de mise en forme markdown. Chaque ligne doit contenir exactement 8 champs séparés par le caractère | (pipe), dans cet ordre exact :
+
+Catégorie|Question|Réponse A|Réponse B|Réponse C|Réponse D|IndexBonneRéponse|Petit fait
+
+Règles strictes :
+- Catégorie : toujours exactement "${theme}"
+- Question : complète, avec point d'interrogation
+- Réponse A/B/C/D : 4 réponses plausibles, une seule correcte
+- IndexBonneRéponse : un chiffre entre 0 et 3 (0=A, 1=B, 2=C, 3=D), jamais la réponse elle-même
+- Petit fait : une phrase courte (1-2 phrases) affichée après la révélation
+- Aucun champ ne doit contenir le caractère |
+- Une question par ligne, pas de retour à la ligne à l'intérieur d'un champ
+- Public familial (11 à 40 ans) : pas de contenu violent, sexuel, offensant ou discriminatoire
+- Ne reproduis jamais de paroles de chansons ni de texte protégé mot pour mot
+- Si tu n'es pas sûr d'un fait précis, choisis une question plus générale plutôt que d'inventer un détail`;
+}
+
+async function callGemini(apiKey, model, prompt){
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+  });
+  const data = await res.json();
+  if(!res.ok) throw new Error((data.error && data.error.message) || ("HTTP " + res.status));
+  const text = data.candidates && data.candidates[0] && data.candidates[0].content &&
+    data.candidates[0].content.parts && data.candidates[0].content.parts[0]
+    ? data.candidates[0].content.parts[0].text : "";
+  if(!text.trim()) throw new Error("Réponse vide de la part de Gemini.");
+  return text;
+}
+
+async function callGroq(apiKey, model, prompt){
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + apiKey },
+    body: JSON.stringify({ model, messages: [{ role: "user", content: prompt }] })
+  });
+  const data = await res.json();
+  if(!res.ok) throw new Error((data.error && data.error.message) || ("HTTP " + res.status));
+  const text = data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : "";
+  if(!text || !text.trim()) throw new Error("Réponse vide de la part de Groq.");
+  return text;
+}
+
+window.generateWithAI = async function(){
+  const providerKey = document.getElementById("aiProviderSelect").value;
+  const provider = AI_PROVIDERS[providerKey];
+  const apiKey = document.getElementById("aiKeyInput").value.trim();
+  const model = document.getElementById("aiModelInput").value.trim() || provider.defaultModel;
+  const theme = document.getElementById("aiThemeInput").value.trim();
+  const count = Math.max(1, Math.min(100, parseInt(document.getElementById("aiCountInput").value, 10) || 20));
+
+  if(!apiKey){ showStatus("aiStatus","err", `❌ Renseigne ta clé API ${provider.label}.`); return; }
+  if(!theme){ showStatus("aiStatus","err","❌ Indique un thème / une catégorie."); return; }
+
+  localStorage.setItem(provider.keyStorageKey, apiKey);
+  localStorage.setItem(provider.modelStorageKey, model);
+
+  const btn = document.getElementById("aiGenerateBtn");
+  btn.disabled = true;
+  showStatus("aiStatus","info", `Génération de ${count} question(s) via ${provider.label} en cours… (10 à 30 secondes)`);
+
+  try{
+    const prompt = buildQuizPrompt(theme, count);
+    const text = providerKey === "groq" ? await callGroq(apiKey, model, prompt) : await callGemini(apiKey, model, prompt);
+
+    const { parsed, errors } = parseBulkText(text);
+    questions.push(...parsed);
+    let msg = `✅ ${parsed.length} question(s) générée(s) et ajoutée(s) sur « ${theme} » (via ${provider.label}).`;
+    if(errors.length){
+      msg += ` ⚠️ ${errors.length} ligne(s) ignorée(s) (format inattendu) :\n` + errors.slice(0,5).join("\n");
+      if(errors.length > 5) msg += `\n… et ${errors.length-5} de plus.`;
+    }
+    msg += `\n\nRelis les questions générées avant d'enregistrer : une IA peut se tromper sur des faits précis.`;
+    showStatus("aiStatus", errors.length ? "err" : "ok", msg);
+    renderList();
+  }catch(err){
+    showStatus("aiStatus","err","❌ " + (err.message || `erreur lors de l'appel à ${provider.label}`));
+  }finally{
+    btn.disabled = false;
+  }
+};
+
+window.addSingleQuestion = function(){
+  const cat = document.getElementById("newCat").value.trim();
+  const q = document.getElementById("newQ").value.trim();
+  const a = document.getElementById("newOptA").value.trim();
+  const b = document.getElementById("newOptB").value.trim();
+  const c = document.getElementById("newOptC").value.trim();
+  const d = document.getElementById("newOptD").value.trim();
+  const fact = document.getElementById("newFact").value.trim();
+  const correct = parseInt(document.querySelector('input[name="newCorrect"]:checked').value, 10);
+  if(!cat || !q || !a || !b || !c || !d){
+    showStatus("importStatus","err","❌ Remplis au moins la catégorie, la question et les 4 réponses.");
+    return;
+  }
+  questions.push({ cat, q, opts:[a,b,c,d], correct, fact });
+  ["newCat","newQ","newOptA","newOptB","newOptC","newOptD","newFact"].forEach(id => document.getElementById(id).value = "");
+  showStatus("importStatus","ok","✅ Question ajoutée.");
+  renderList();
+};
+
+window.deleteQuestion = function(idx){
+  questions.splice(idx, 1);
+  renderList();
+};
+window.clearFlag = function(idx){
+  questions[idx].flagged = false;
+  questions[idx].flag_note = "";
+  renderList();
+};
+window.deleteCategory = function(cat){
+  const count = questions.filter(q => q.cat === cat).length;
+  if(!confirm(`Supprimer toute la catégorie « ${cat} » et ses ${count} question(s) ? Cette action est immédiate (pense à enregistrer pour la rendre définitive).`)) return;
+  questions = questions.filter(q => q.cat !== cat);
+  renderList();
+};
+window.toggleCat = function(cat){
+  if(expandedCats.has(cat)) expandedCats.delete(cat); else expandedCats.add(cat);
+  renderList();
+};
+window.updateField = function(idx, field, value){
+  questions[idx][field] = value;
+};
+window.updateOpt = function(idx, optIdx, value){
+  questions[idx].opts[optIdx] = value;
+};
+window.updateCorrect = function(idx, value){
+  questions[idx].correct = parseInt(value, 10);
+};
+
+function renderList(){
+  document.getElementById("totalCounter").textContent = `${questions.length} questions au total`;
+
+  const catCounts = {};
+  questions.forEach(q => { catCounts[q.cat] = (catCounts[q.cat]||0) + 1; });
+  const cats = Object.keys(catCounts).sort();
+
+  const filterSelect = document.getElementById("catFilter");
+  const prevFilter = filterSelect.value;
+  filterSelect.innerHTML = '<option value="">Toutes les catégories</option>' +
+    cats.map(c => `<option value="${c.replace(/"/g,'&quot;')}">${c} (${catCounts[c]})</option>`).join("");
+  if(cats.includes(prevFilter)) filterSelect.value = prevFilter;
+
+  const search = document.getElementById("searchInput").value.trim().toLowerCase();
+  const catFilterVal = filterSelect.value;
+  const flaggedOnly = document.getElementById("flaggedOnlyFilter").checked;
+
+  const listArea = document.getElementById("listArea");
+  let html = "";
+
+  cats.forEach(cat => {
+    if(catFilterVal && cat !== catFilterVal) return;
+    const itemsInCat = questions
+      .map((q, idx) => ({ q, idx }))
+      .filter(({q}) => q.cat === cat)
+      .filter(({q}) => !search || q.q.toLowerCase().includes(search) || q.opts.some(o=>o.toLowerCase().includes(search)))
+      .filter(({q}) => !flaggedOnly || q.flagged);
+
+    if((search || flaggedOnly) && itemsInCat.length === 0) return;
+
+    const isExpanded = expandedCats.has(cat) || !!search || flaggedOnly;
+    const currentGroup = getGroupForCat(cat);
+    const flaggedCount = questions.filter(q => q.cat === cat && q.flagged).length;
+    html += `
+      <div class="cat-header" data-action="toggle-cat" data-cat="${escAttr(cat)}">
+        <div><span class="title">${isExpanded?'▾':'▸'} ${cat}</span><span class="count">${catCounts[cat]} question(s)${flaggedCount ? ` · 🚩 ${flaggedCount} signalée(s)` : ""}${search ? `, ${itemsInCat.length} affichée(s)` : ""}</span></div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <select data-action="cat-group-select" data-cat="${escAttr(cat)}" style="width:auto;min-width:170px;">
+            <option value="">Non classé (Autres)</option>
+            ${allKnownGroups().map(g => `<option value="${escAttr(g)}" ${currentGroup===g?'selected':''}>${g}</option>`).join("")}
+            <option value="__new__">➕ Nouveau groupe…</option>
+          </select>
+          <button class="btn-danger btn-sm" data-action="delete-cat" data-cat="${escAttr(cat)}">🗑️ Supprimer la catégorie</button>
+        </div>
+      </div>
+    `;
+    if(isExpanded){
+      html += `<div class="cat-body">`;
+      itemsInCat.forEach(({q, idx}) => {
+        html += `
+          <div class="q-row" style="${q.flagged ? 'border-color:var(--coral);' : ''}">
+            ${q.flagged ? `<p class="hint" style="color:var(--coral);margin:0 0 8px;">🚩 Signalée pendant une partie${q.flag_note ? ' : « ' + escAttr(q.flag_note) + ' »' : ''}</p>` : ""}
+            <div class="row">
+              <div style="flex:3;">
+                <label>Question</label>
+                <input type="text" value="${escAttr(q.q)}" oninput="updateField(${idx},'q',this.value)">
+              </div>
+              <div style="flex:1;">
+                <label>Catégorie</label>
+                <input type="text" value="${escAttr(q.cat)}" oninput="updateField(${idx},'cat',this.value)">
+              </div>
+            </div>
+            <div class="opt-grid">
+              ${[0,1,2,3].map(i => `
+                <div class="opt-item">
+                  <input type="radio" name="correct-${idx}" value="${i}" ${q.correct===i?'checked':''} onchange="updateCorrect(${idx}, this.value)">
+                  <input type="text" value="${escAttr(q.opts[i])}" oninput="updateOpt(${idx},${i},this.value)">
+                </div>
+              `).join("")}
+            </div>
+            <label>Petit fait</label>
+            <input type="text" value="${escAttr(q.fact||'')}" oninput="updateField(${idx},'fact',this.value)">
+            <div class="row" style="margin-top:8px;">
+              ${q.flagged ? `<button class="btn-teal btn-sm" onclick="clearFlag(${idx})">✅ Marquer comme corrigée</button>` : ""}
+              <button class="btn-danger btn-sm" onclick="deleteQuestion(${idx})">🗑️ Supprimer cette question</button>
+            </div>
+          </div>
+        `;
+      });
+      html += `</div>`;
+    }
+  });
+
+  listArea.innerHTML = html || '<p class="hint">Aucune question ne correspond à ta recherche.</p>';
+}
+function escAttr(str){
+  return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+}
+
+document.getElementById("listArea").addEventListener("click", function(e){
+  if(e.target.closest("select")) return;
+  const delBtn = e.target.closest('[data-action="delete-cat"]');
+  if(delBtn){
+    e.stopPropagation();
+    deleteCategory(delBtn.dataset.cat);
+    return;
+  }
+  const toggleHeader = e.target.closest('[data-action="toggle-cat"]');
+  if(toggleHeader){
+    toggleCat(toggleHeader.dataset.cat);
+  }
+});
+document.getElementById("listArea").addEventListener("change", function(e){
+  const sel = e.target.closest('[data-action="cat-group-select"]');
+  if(!sel) return;
+  const cat = sel.dataset.cat;
+  let val = sel.value;
+  if(val === "__new__"){
+    const name = prompt("Nom du nouveau groupe/filtre :");
+    val = (name && name.trim()) ? name.trim() : "";
+  }
+  questions.forEach(q => { if(q.cat === cat) q.group = val; });
+  renderList();
+});
+</script>
+</body>
+</html>

@@ -8,94 +8,193 @@
 <link rel="icon" href="./icon-192.png">
 <link rel="apple-touch-icon" href="./icon-192.png">
 <meta name="theme-color" content="#1b1030">
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --bg:#1b1030; --panel:#2a1b4d; --panel-light:#35225e;
-    --coral:#ff5d73; --gold:#ffc857; --teal:#3ddc97; --blue:#5b8dee;
-    --text:#f6f2ff; --muted:#b8a9d9;
-  }
-  *{box-sizing:border-box;}
-  body{ margin:0; background: radial-gradient(circle at 20% -10%, #3a2263 0%, var(--bg) 55%);
-    color:var(--text); font-family:'Inter',sans-serif; min-height:100vh; }
-  h1,h2,h3{ font-family:'Baloo 2',sans-serif; }
-  #app{ max-width:900px; margin:0 auto; padding:28px 20px 60px; }
-  .header{ text-align:center; margin-bottom:28px; }
-  .header img{ max-width:280px; width:100%; border-radius:20px; margin-bottom:14px; }
-  .header h1{ font-size: clamp(24px,5vw,34px); margin:0 0 6px; }
-  .header p{ color:var(--muted); margin:0; }
-
-  .game-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:18px; margin-top:24px; }
-  .game-card{ background:var(--panel); border:2px solid rgba(255,200,87,0.4); border-radius:22px; padding:26px 22px;
-    text-align:center; text-decoration:none; color:var(--text); display:block; transition:all .15s ease; position:relative; }
-  .game-card.live:hover{ border-color:var(--gold); transform:translateY(-3px); box-shadow:0 10px 24px rgba(0,0,0,0.35); }
-  .game-card.soon{ opacity:0.55; cursor:default; border-style:dashed; }
-  .game-card .emoji{ font-size:44px; margin-bottom:10px; }
-  .game-card h3{ margin:0 0 6px; font-size:20px; }
-  .game-card p{ margin:0; color:var(--muted); font-size:14px; }
-  .badge{ position:absolute; top:14px; right:14px; font-size:11px; font-weight:700; padding:3px 10px; border-radius:999px; }
-  .badge.live{ background:var(--teal); color:#0e2c22; }
-  .badge.soon{ background:var(--panel-light); color:var(--muted); }
-
-  footer{ text-align:center; color:var(--muted); font-size:13px; margin-top:40px; }
-</style>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Jeux Famille">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;600;700&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<link rel="stylesheet" href="./shared/ui.css">
 </head>
 <body>
-<div id="app">
-  <div class="header">
-    <img src="./logo.png" alt="Logo de la famille">
-    <h1>🎲 Les Jeux de la Famille</h1>
-    <p>Choisis un jeu pour commencer</p>
-  </div>
-  <div class="game-grid" id="gameGrid"></div>
-  <footer>Nouveau jeu à ajouter ? Édite la liste <code>GAMES</code> tout en haut du fichier.</footer>
-</div>
+<canvas id="confetti"></canvas>
+<button id="muteBtn" style="position:fixed;top:14px;right:14px;z-index:60;width:40px;height:40px;border-radius:50%;border:2px solid rgba(255,200,87,0.4);background:#2a1b4d;color:#f6f2ff;font-size:16px;cursor:pointer;">🔊</button>
 
-<script>
-/* ==========================================================
-   Pour ajouter un nouveau jeu, ajoute simplement une ligne ici.
-   - name   : nom affiché
-   - desc   : petite description
-   - emoji  : icône
-   - url    : lien complet vers le jeu (laisse null si pas encore prêt)
-   ========================================================== */
+<div id="app"></div>
+
+<script type="module">
+import { startRouter, registerRoute, navigate } from "./shared/router.js";
+import { getActiveProfile, activeProfileBadgeHtml, bindChangeProfileHandler, renderProfilePicker } from "./shared/profile.js";
+import { renderHistoryScreen } from "./shared/history.js";
+
+const appEl = document.getElementById("app");
+
+function currentRoutePath() {
+  const hash = location.hash || "#/";
+  return hash.startsWith("#") ? hash.slice(1) : hash;
+}
+
+function topbarHtml(activeRoute) {
+  const links = [
+    { path: "/", label: "🏠 Accueil" },
+    { path: "/quiz", label: "🐼 Quiz" },
+    { path: "/naval", label: "🎯 Bataille navale" },
+    { path: "/historique", label: "📊 Historique" }
+  ];
+  return `
+    <div class="topbar">
+      <div class="brand"><a href="#/">🎲 Les Jeux <span>de la Famille</span></a></div>
+      <div class="topbar-right">
+        <nav class="nav-links">
+          ${links.map(l => `<a href="#${l.path}" class="${activeRoute === l.path ? "active" : ""}">${l.label}</a>`).join("")}
+        </nav>
+        <span id="profileBadgeSlot"></span>
+      </div>
+    </div>
+  `;
+}
+
+function renderProfileBadge() {
+  const slot = document.getElementById("profileBadgeSlot");
+  if (slot) slot.innerHTML = activeProfileBadgeHtml();
+}
+
+bindChangeProfileHandler(document.body, () => {
+  renderProfileBadge();
+  // Si on est dans un écran de jeu, on le fait recharger pour qu'il redemande un profil.
+  window.dispatchEvent(new HashChangeEvent("hashchange"));
+});
+
+/* ============ ACCUEIL ============ */
 const GAMES = [
-  {
-    name: "Le Grand Quiz de la Tribu",
-    desc: "Le quiz familial en équipe, en solo ou en tournoi",
-    emoji: "🐼",
-    url: "https://maraisopossum.github.io/FamilleDeOuf/"
-  },
-  {
-    name: "La bataille navale de la tribu",
-    desc: "Les bateaux ça Margaux connaît, la destruction aussi, à toi de jouer",
-    emoji: "🎯",
-    url: "https://maraisopossum.github.io/FamilleDeOufBatailleNavale/"
-  },
-  {
-    name: "Prochain jeu",
-    desc: "Bientôt disponible",
-    emoji: "🎲",
-    url: null
-  }
+  { name: "Le Grand Quiz de la Tribu", desc: "Le quiz familial en équipe, en solo ou en tournoi", emoji: "🐼", route: "/quiz" },
+  { name: "La bataille navale de la tribu", desc: "Les bateaux ça Margaux connaît, la destruction aussi, à toi de jouer", emoji: "🎯", route: "/naval" },
+  { name: "Historique de la tribu", desc: "Tous les scores, tous les jeux confondus", emoji: "📊", route: "/historique" },
+  { name: "Prochain jeu", desc: "Bientôt disponible", emoji: "🎲", route: null }
 ];
 
-const grid = document.getElementById("gameGrid");
-grid.innerHTML = GAMES.map(g => {
-  const isLive = !!g.url;
-  const tag = isLive
-    ? `<a class="game-card live" href="${g.url}">`
-    : `<div class="game-card soon">`;
-  const closeTag = isLive ? "</a>" : "</div>";
-  return `
-    ${tag}
-      <span class="badge ${isLive ? 'live' : 'soon'}">${isLive ? 'Disponible' : 'Bientôt'}</span>
-      <div class="emoji">${g.emoji}</div>
-      <h3>${g.name}</h3>
-      <p>${g.desc}</p>
-    ${closeTag}
+registerRoute("/", async (container) => {
+  container.innerHTML = `
+    ${topbarHtml("/")}
+    <div class="header">
+      <img src="./logo.png" alt="Logo de la famille">
+      <h1>🎲 Les Jeux de la Famille</h1>
+      <p>Choisis un jeu pour commencer</p>
+    </div>
+    <div class="game-grid" id="gameGrid"></div>
+    <footer>Nouveau jeu à ajouter ? Édite la liste <code>GAMES</code> dans index.html.</footer>
   `;
-}).join("");
+  renderProfileBadge();
+  const grid = container.querySelector("#gameGrid");
+  grid.innerHTML = GAMES.map(g => {
+    const isLive = !!g.route;
+    return `
+      <div class="game-card ${isLive ? "live" : "soon"}" ${isLive ? `data-goto="${g.route}"` : ""}>
+        <span class="badge ${isLive ? "live" : "soon"}">${isLive ? "Disponible" : "Bientôt"}</span>
+        <div class="emoji">${g.emoji}</div>
+        <h3>${g.name}</h3>
+        <p>${g.desc}</p>
+      </div>
+    `;
+  }).join("");
+  grid.addEventListener("click", (e) => {
+    const card = e.target.closest("[data-goto]");
+    if (card) navigate(card.dataset.goto);
+  });
+});
+
+/* ============ HISTORIQUE ============ */
+registerRoute("/historique", async (container) => {
+  container.innerHTML = topbarHtml("/historique") + `<div id="historyMount"></div>`;
+  renderProfileBadge();
+  await renderHistoryScreen(container.querySelector("#historyMount"));
+});
+
+/* ============ QUIZ (chargement paresseux du module du jeu) ============ */
+registerRoute("/quiz", async (container) => {
+  container.innerHTML = topbarHtml("/quiz") + `<div id="gameMount"></div>`;
+  renderProfileBadge();
+  const mount = container.querySelector("#gameMount");
+  if (!getActiveProfile()) {
+    await renderProfilePicker(mount, () => { renderProfileBadge(); navigate("/quiz"); }, {
+      title: "Qui joue au quiz ?",
+      subtitle: "Choisis ton profil — il restera actif pour tous les jeux."
+    });
+    return;
+  }
+  const mod = await import("./games/quiz.js");
+  return mod.mountQuiz(mount, { onChangeProfile: () => { navigate("/quiz"); } });
+});
+
+/* ============ BATAILLE NAVALE ============ */
+registerRoute("/naval", async (container) => {
+  container.innerHTML = topbarHtml("/naval") + `<div id="gameMount"></div>`;
+  renderProfileBadge();
+  const mount = container.querySelector("#gameMount");
+  if (!getActiveProfile()) {
+    await renderProfilePicker(mount, () => { renderProfileBadge(); navigate("/naval"); }, {
+      title: "Qui prend la barre ?",
+      subtitle: "Choisis ton profil — il restera actif pour tous les jeux."
+    });
+    return;
+  }
+  const mod = await import("./games/naval.js");
+  return mod.mountNaval(mount, { onChangeProfile: () => { navigate("/naval"); } });
+});
+
+registerRoute("__notfound__", null);
+
+startRouter(appEl);
+window.addEventListener("hashchange", renderProfileBadge);
+
+/* ============ SON (mute global, partagé par les deux jeux) ============ */
+window.soundMuted = localStorage.getItem("fdo_sound_muted") === "1";
+function updateMuteBtn() {
+  document.getElementById("muteBtn").textContent = window.soundMuted ? "🔇" : "🔊";
+}
+document.getElementById("muteBtn").addEventListener("click", () => {
+  window.soundMuted = !window.soundMuted;
+  localStorage.setItem("fdo_sound_muted", window.soundMuted ? "1" : "0");
+  updateMuteBtn();
+});
+updateMuteBtn();
+
+/* ============ CONFETTI (partagé) ============ */
+const confettiCanvas = document.getElementById("confetti");
+const cctx = confettiCanvas.getContext("2d");
+let confettiParticles = [];
+let confettiRunning = false;
+function resizeCanvas(){ confettiCanvas.width = innerWidth; confettiCanvas.height = innerHeight; }
+window.addEventListener("resize", resizeCanvas); resizeCanvas();
+window.burstConfetti = function burstConfetti(count){
+  count = count || 110;
+  const colors = ["#ff5d73","#ffc857","#3ddc97","#5b8dee","#f6f2ff"];
+  for(let i=0;i<count;i++){
+    confettiParticles.push({ x: innerWidth/2 + (Math.random()-0.5)*200, y: innerHeight*0.3,
+      vx: (Math.random()-0.5)*10, vy: Math.random()*-9 - 2, size: Math.random()*8+4,
+      color: colors[Math.floor(Math.random()*colors.length)], rot: Math.random()*360,
+      vrot: (Math.random()-0.5)*10, life: 0 });
+  }
+  if(!confettiRunning){ confettiRunning = true; animateConfetti(); }
+};
+function animateConfetti(){
+  cctx.clearRect(0,0,confettiCanvas.width, confettiCanvas.height);
+  confettiParticles.forEach(p=>{
+    p.vy += 0.28; p.x += p.vx; p.y += p.vy; p.rot += p.vrot; p.life++;
+    cctx.save(); cctx.translate(p.x,p.y); cctx.rotate(p.rot*Math.PI/180);
+    cctx.fillStyle = p.color; cctx.fillRect(-p.size/2,-p.size/2,p.size,p.size*0.6); cctx.restore();
+  });
+  confettiParticles = confettiParticles.filter(p=>p.y < innerHeight+50 && p.life < 400);
+  if(confettiParticles.length>0){ requestAnimationFrame(animateConfetti); }
+  else { confettiRunning = false; cctx.clearRect(0,0,confettiCanvas.width, confettiCanvas.height); }
+}
+</script>
+<script>
+  if("serviceWorker" in navigator){
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    });
+  }
 </script>
 </body>
 </html>
