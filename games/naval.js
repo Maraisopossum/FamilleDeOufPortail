@@ -175,6 +175,32 @@ const roomPatch = (code, body) => {
 };
 
 /* ============================================================
+   ANNULATION D'UN SALON
+   ============================================================ */
+// Toujours passer par ici pour fermer/annuler son propre salon : si un
+// adversaire a déjà rejoint, on ne supprime pas la ligne en direct (il ne
+// recevrait alors aucune notification), on la marque "cancelled" pour que
+// son écran (abonné aux mises à jour du salon) le détecte et l'affiche.
+async function cancelRoom(){
+  if(!S.code) return;
+  const code = S.code;
+  try{
+    const r = await roomLoad(code);
+    const opponentPresent = r && ((S.role === "host" && r.guest_name) || (S.role === "guest" && r.host_name && r.host_name !== S.profile.name));
+    if(opponentPresent){
+      await roomPatch(code, { status:"cancelled" });
+    }else{
+      await sb("naval_rooms?code=eq." + code, { method:"DELETE" });
+    }
+  }catch(e){ /* au pire le salon restera visible et sera purgé plus tard */ }
+  leaveRoomChannel();
+  S.code = null; S.mode = null; S.ended = true;
+  resetMultiPanels();
+  show("mode");
+  refreshLobby();
+}
+
+/* ============================================================
    ÉTAT GLOBAL
    ============================================================ */
 const S = {
@@ -297,10 +323,20 @@ function makeCode(){
   return Array.from({length:4}, () => A.charAt(Math.floor(Math.random()*A.length))).join("");
 }
 
+// Salons visiblement abandonnés (personne ne reste 24h en "attente d'un
+// adversaire") : on les efface silencieusement à chaque chargement de la
+// liste, pour que les vieux salons de test ne s'accumulent pas pour toujours.
+async function purgeStaleRooms(){
+  if(!CONFIG_OK) return;
+  const cutoff = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+  try{ await sb("naval_rooms?created_at=lt." + encodeURIComponent(cutoff), { method:"DELETE" }); }catch(e){ /* tant pis, on retentera plus tard */ }
+}
+
 let lobbyChannel = null;
 async function refreshLobby(){
   if(!CONFIG_OK) return;
   const me = encodeURIComponent(S.profile.name);
+  purgeStaleRooms();
   try{
     const open = await sb("naval_rooms?select=code,host_name,status,created_at" +
       "&status=eq.waiting&guest_name=is.null&order=created_at.desc&limit=12");
@@ -348,11 +384,11 @@ function renderLobby(open, mine){
   }
   if(own.length){
     html += own.map(r =>
-      '<div class="room" style="cursor:default;border-color:rgba(184,169,217,.3)">' +
+      '<button class="room" data-join="' + escAttr(r.code) + '" style="border-color:rgba(184,169,217,.3)">' +
       '<span class="rc">' + escAttr(r.code) + '</span>' +
       '<span class="ri"><span class="rh">Ton salon</span>' +
-      '<span class="rt">en attente d\'un adversaire</span></span>' +
-      '<span class="go">⏳</span></div>').join("");
+      '<span class="rt">en attente d\'un adversaire — retourner dedans</span></span>' +
+      '<span class="go">▶</span></button>').join("");
   }
   el.innerHTML = html || '<p class="muted">Aucun salon ouvert pour l\'instant. Ouvre le tien, il apparaîtra chez les autres.</p>';
 }
@@ -364,6 +400,18 @@ function bindLobbyDelegates(){
   $("#resumeBox").addEventListener("click", (e) => {
     const b = e.target.closest("[data-resume]");
     if(b) resumeRoom(b.dataset.resume);
+  });
+  $("#btnPurgeRooms").addEventListener("click", async () => {
+    const btn = $("#btnPurgeRooms");
+    btn.disabled = true; btn.textContent = "Nettoyage…";
+    try{
+      // Salons "en attente" abandonnés : personne n'y reste des heures sans
+      // que quelqu'un d'autre les rejoigne. On les efface tous d'un coup,
+      // sauf le mien s'il en existe un (au cas où j'attends encore quelqu'un).
+      await sb("naval_rooms?status=eq.waiting&host_name=neq." + encodeURIComponent(S.profile.name), { method:"DELETE" });
+    }catch(e){ /* pas grave, on réessaiera au prochain chargement */ }
+    btn.disabled = false; btn.textContent = "🧹 Vider les salons inactifs";
+    refreshLobby();
   });
 }
 function startLobbyWatch(){
@@ -408,12 +456,10 @@ function bindHostRoomButton(){
   });
   $("#btnJoinCancel").addEventListener("click", resetMultiPanels);
   $("#btnJoinGo").addEventListener("click", () => joinRoom($("#joinCode").value.trim().toUpperCase()));
-  $("#btnCancelRoom").addEventListener("click", async () => {
-    if(S.code){ try{ await sb("naval_rooms?code=eq." + S.code, { method:"DELETE" }); }catch(e){} }
-    leaveRoomChannel();
-    S.code = null;
-    resetMultiPanels();
-    refreshLobby();
+  $("#btnCancelRoom").addEventListener("click", cancelRoom);
+  $("#btnCancelPlacement").addEventListener("click", () => {
+    if(confirm("Annuler ce salon ? " + (S.role === "guest" ? "" : "Si un adversaire l'a déjà rejoint, la partie s'arrêtera aussi pour lui.")))
+      cancelRoom();
   });
 }
 
@@ -519,12 +565,17 @@ function startPlacement(){
   $("#waitOpponent").classList.add("hidden");
   $("#btnReady").disabled = false;
   $("#btnReady").textContent = "Flotte prête";
+  $("#btnCancelPlacement").classList.toggle("hidden", S.mode !== "multi");
   $("#placeHint").textContent = S.mode === "multi" && S.role === "host"
     ? "Ton salon est déjà visible par la famille. Place ta flotte pendant qu'un adversaire arrive."
     : "Choisis un navire, puis touche la case de départ. Les navires peuvent se toucher, jamais se chevaucher.";
   buildGrid($("#placeGrid"));
   paintPlacement();
   show("place", S.mode === "solo" ? "solo" : "mode");
+  // Le temps réel Supabase n'est pas fiable à 100 % : ce sondage de secours
+  // permet de détecter une annulation ou l'arrivée de l'adversaire même si
+  // les évènements temps réel ne passent pas.
+  if(S.mode === "multi") startFallback();
 }
 
 function buildGrid(el){
@@ -626,6 +677,17 @@ function bindPlacementScreen(){
    ============================================================ */
 async function onRoomUpdate(r){
   if(!r || r.code !== S.code) return;
+
+  if(r.status === "cancelled" && !S.ended){
+    S.ended = true;
+    leaveRoomChannel();
+    alert("L'autre joueur a annulé ce salon.");
+    S.code = null; S.mode = null;
+    resetMultiPanels();
+    show("mode");
+    refreshLobby();
+    return;
+  }
 
   if(S.role === "host" && r.guest_name && S.foe !== r.guest_name){
     S.foe = r.guest_name;
@@ -955,7 +1017,10 @@ function shellHtml(){
         <div class="status err" id="multiErr" hidden></div>
         <div id="multiChoice">
           <div class="status info" id="resumeBox" hidden></div>
-          <label class="field-label">Salons en attente d'un adversaire</label>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+            <label class="field-label" style="margin:0;">Salons en attente d'un adversaire</label>
+            <button class="btn btn-ghost btn-sm" id="btnPurgeRooms" type="button">🧹 Vider les salons inactifs</button>
+          </div>
           <div id="openRooms" class="rooms"></div>
           <div class="role-grid" style="margin-top:18px">
             <div class="role-card" id="btnHost"><div class="emoji">🏳️</div><h3>Ouvrir un salon</h3><p>Ton salon apparaît aussitôt dans la liste des autres, avec un code de secours.</p></div>
@@ -1002,6 +1067,7 @@ function shellHtml(){
             <div class="fleet" id="placeFleet"></div>
             <div class="btn-row" style="margin-top:16px">
               <button class="btn btn-gold" id="btnReady" disabled>Flotte prête</button>
+              <button class="btn btn-ghost btn-sm hidden" id="btnCancelPlacement">Annuler le salon</button>
             </div>
             <p class="muted hidden" id="waitOpponent" style="margin-top:12px">Flotte enregistrée. On attend que l'adversaire finisse de placer la sienne…</p>
           </div>
