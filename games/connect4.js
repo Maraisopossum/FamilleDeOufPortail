@@ -500,10 +500,10 @@ function paintBoard(){
   for(let c=0;c<COLS;c++){
     const canPlay = !S.over && S.board[c].length < ROWS && isMyTurn() && (S.mode === "solo" || !!S.foe);
     html += '<div class="c4-col' + (canPlay ? " playable" : "") + '" data-col="' + c + '">';
-    for(let rTop=ROWS-1; rTop>=0; rTop--){
-      const owner = ownerAt(S.board, c, rTop);
+    for(let r=0; r<ROWS; r++){
+      const owner = ownerAt(S.board, c, r);
       const cls = owner === "host" ? " host" : owner === "guest" ? " guest" : "";
-      const isLast = lastCell === c + "," + rTop;
+      const isLast = lastCell === c + "," + r;
       html += '<div class="c4-cell' + cls + (isLast ? " last" : "") + '"></div>';
     }
     html += "</div>";
