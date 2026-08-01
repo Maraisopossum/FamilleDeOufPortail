@@ -295,7 +295,7 @@ function renderConfigWarning(){
 function renderRoleSelect(){
   app.innerHTML = `
     <div class="card" style="text-align:center;padding:18px;">
-      <img src="./logo.png" alt="La Team Kahoot" style="width:100%;max-width:420px;border-radius:20px;">
+      <img src="./quiz-logo.png" alt="La Team Kahoot" style="width:100%;max-width:420px;border-radius:20px;">
     </div>
     <div class="card">
       <h1 class="setup-title">Chacun son écran !</h1>
@@ -584,7 +584,7 @@ function renderHostLobby(){
       ` : ""}
       <div class="btn-row">
         <button class="btn btn-primary" id="startBtn" ${(host.selectedCats.length<1 || (playerNames.length<1 && !(host.hostPlaysToo && activeProfile.name))) ? 'disabled':''}>Lancer la partie 🚀</button>
-        <button class="btn btn-ghost" id="cancelLobbyBtn">‹ Annuler le salon</button>
+        <button class="btn btn-ghost" id="cancelLobbyBtn">‹ Retour</button>
       </div>
     </div>
     <footer>Astuce : idéalement au moins 2 joueurs pour que ce soit marrant.</footer>
@@ -1118,8 +1118,10 @@ function renderPlayerScreen(){
 }
 
 function renderJoinForm(){
+  installLobbyBackGuard();
   const prefilledCode = pendingJoinCode || "";
   app.innerHTML = `
+    <button class="btn btn-ghost btn-sm" id="backToRoleSelectBtn" style="margin-bottom:14px;">‹ Retour</button>
     <div class="card">
       <h1 class="setup-title">Salut ${escAttr(activeProfile.name)} !</h1>
       <div id="openRoomsArea"></div>
@@ -1137,6 +1139,7 @@ function renderJoinForm(){
   setupOpenRoomsListener();
   renderOpenRoomsArea();
   app.querySelector("#btnJoin").addEventListener("click", playerJoin);
+  app.querySelector("#backToRoleSelectBtn").addEventListener("click", leaveToRoleSelect);
 }
 function renderHandicapSelectRow(){
   const row = document.getElementById("handicapSelectRow");
@@ -1174,7 +1177,7 @@ function renderPlayerWaiting(){
       <div style="font-size:50px;margin-bottom:10px;">⏳</div>
       <h1 class="setup-title">En attente du lancement…</h1>
       <p class="setup-sub">L'hôte va bientôt démarrer la partie. Garde ton téléphone sous les yeux !</p>
-      <button class="btn btn-ghost" id="leaveWaitingBtn" style="margin-top:18px;">‹ Quitter le salon</button>
+      <button class="btn btn-ghost" id="leaveWaitingBtn" style="margin-top:18px;">‹ Retour</button>
     </div>
   `;
   app.querySelector("#leaveWaitingBtn").addEventListener("click", leaveToRoleSelect);
@@ -1342,7 +1345,9 @@ function renderSoloScreen(){
 }
 
 function renderSoloSetup(){
+  installLobbyBackGuard();
   app.innerHTML = `
+    <button class="btn btn-ghost btn-sm" id="backToRoleSelectBtn" style="margin-bottom:14px;">‹ Retour</button>
     <div class="card">
       <h1 class="setup-title">Salut ${escAttr(activeProfile.name)} !</h1>
       <p class="setup-sub">Réponds à ton rythme : la bonne réponse s'affiche tout de suite après chaque question.</p>
@@ -1358,6 +1363,7 @@ function renderSoloSetup(){
   renderSoloFormatRow();
   renderSoloThemeRow();
   app.querySelector("#soloStartBtn").addEventListener("click", soloStart);
+  app.querySelector("#backToRoleSelectBtn").addEventListener("click", leaveToRoleSelect);
 }
 function renderSoloFormatRow(){
   const row = document.getElementById("soloFormatRow");

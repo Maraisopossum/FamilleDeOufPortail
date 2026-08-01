@@ -12,11 +12,6 @@ if (!document.getElementById("naval-styles")) {
   const style = document.createElement("style");
   style.id = "naval-styles";
   style.textContent = `
-  .naval-screen .mini-topbar{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
-  .naval-screen .mini-topbar .mascot{width:42px;height:42px;border-radius:14px;flex:0 0 auto;background:var(--panel-light);display:grid;place-items:center;font-size:23px;}
-  .naval-screen .mini-topbar h2{font-size:19px;line-height:1.1;font-weight:800;margin:0;}
-  .naval-screen .mini-topbar .sub{font-size:12px;color:var(--muted);margin-top:2px;}
-  .naval-screen .mini-topbar .spacer{flex:1 1 auto;}
   .naval-screen .screen{display:none;animation:naval-fade .28s ease;}
   .naval-screen .screen.on{display:block;}
   @keyframes naval-fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
@@ -26,12 +21,6 @@ if (!document.getElementById("naval-styles")) {
   .naval-screen .status.err{background:rgba(255,93,115,.13);border:1px solid var(--coral);color:#ffd7dd;}
   .naval-screen .status.info{background:rgba(91,141,238,.13);border:1px solid var(--blue);color:#d7e3ff;}
   .naval-screen .status[hidden]{display:none;}
-  .naval-screen .picks{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;}
-  .naval-screen .pick{background:var(--panel-light);border:2px solid rgba(255,200,87,.4);border-radius:20px;padding:22px;cursor:pointer;text-align:left;color:var(--text);transition:border-color .15s ease, transform .15s ease, box-shadow .15s ease;}
-  .naval-screen .pick:hover,.naval-screen .pick.sel{border-color:var(--gold);transform:translateY(-3px);box-shadow:0 12px 26px rgba(0,0,0,.3);}
-  .naval-screen .pick .ico{font-size:30px;display:block;margin-bottom:10px;}
-  .naval-screen .pick .t{font-family:'Baloo 2',cursive;font-weight:700;font-size:19px;}
-  .naval-screen .pick .d{font-family:'Inter',sans-serif;font-size:13px;color:var(--muted);margin-top:5px;line-height:1.45;}
   .naval-screen .boards{display:flex;flex-direction:column;gap:18px;}
   .naval-screen .board-box{background:var(--panel-light);border-radius:20px;padding:14px;}
   .naval-screen .board-head{display:flex;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
@@ -39,7 +28,7 @@ if (!document.getElementById("naval-styles")) {
   .naval-screen .board-head .bs{font-size:12px;color:var(--muted);margin-left:auto;}
   .naval-screen .grid-shell{position:relative;max-width:420px;margin:0 auto;}
   .naval-screen .grid-shell.small{max-width:290px;}
-  .naval-screen .grid{display:grid;grid-template-columns:repeat(11,minmax(0,1fr));gap:2px;aspect-ratio:1;position:relative;z-index:1;}
+  .naval-screen .grid{display:grid;grid-template-columns:repeat(11,minmax(0,1fr));grid-template-rows:repeat(11,minmax(0,1fr));gap:2px;aspect-ratio:1;position:relative;z-index:1;}
   .naval-screen .lbl{display:grid;place-items:center;font-size:clamp(8px,1.9vw,11px);color:var(--muted);font-weight:600;}
   .naval-screen .c{border:0;padding:0;border-radius:4px;cursor:default;background:rgba(91,141,238,.14);display:grid;place-items:center;font-size:clamp(9px,2.4vw,15px);line-height:1;transition:background .15s ease, transform .1s ease;}
   .naval-screen .grid.playable .c.free{cursor:crosshair;}
@@ -78,15 +67,13 @@ if (!document.getElementById("naval-styles")) {
   .naval-screen .room{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--panel-light);border:2px solid rgba(255,200,87,.4);border-radius:16px;padding:13px 15px;cursor:pointer;color:var(--text);font:inherit;transition:border-color .15s ease, transform .15s ease;}
   .naval-screen .room:hover{border-color:var(--gold);transform:translateY(-2px);}
   .naval-screen .room .rc{font-family:'Kalam',cursive;font-weight:700;font-size:22px;color:var(--gold);letter-spacing:2px;flex:0 0 auto;}
-  .naval-screen .room .ri{flex:1 1 auto;min-width:0;}
+  .naval-screen .room .ri{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;}
   .naval-screen .room .rh{font-family:'Baloo 2',cursive;font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .naval-screen .room .rt{font-size:12px;color:var(--muted);margin-top:2px;}
   .naval-screen .room .go{font-size:20px;flex:0 0 auto;}
   .naval-screen .center{text-align:center;}
   .naval-screen .hidden{display:none !important;}
   @media (max-width:560px){
-    .naval-screen .picks{grid-template-columns:1fr;}
-    .naval-screen .pick{flex:0 0 auto;padding:18px;}
     .naval-screen .board-box{padding:10px;}
     .naval-screen .grid-shell.small{max-width:230px;}
   }
@@ -160,8 +147,11 @@ const SFX = {
 async function sb(path, opts){
   opts = opts || {};
   if(!CONFIG_OK) throw new Error("Clé Supabase absente");
-  const url = SUPABASE_URL + "/rest/v1/" + path +
-              (path.indexOf("?") === -1 ? "?" : "&") + "v=" + Date.now();
+  // Pas besoin d'un paramètre anti-cache maison : PostgREST traite tout
+  // paramètre d'URL inconnu comme un filtre de colonne et rejette une
+  // valeur sans opérateur (ex. v=12345) avec une erreur 400. `cache:
+  // "no-store"` ci-dessous suffit déjà à empêcher la mise en cache HTTP.
+  const url = SUPABASE_URL + "/rest/v1/" + path;
   const res = await fetch(url, {
     method: opts.method || "GET",
     cache: "no-store",
@@ -179,7 +169,8 @@ async function sb(path, opts){
 }
 const roomLoad  = (code) => sb("naval_rooms?code=eq." + encodeURIComponent(code) + "&select=*").then(r => (r && r[0]) || null);
 const roomPatch = (code, body) => {
-  body.updated_at = new Date().toISOString();
+  // La table naval_rooms n'a pas de colonne updated_at (seulement
+  // created_at) : lui envoyer ce champ fait échouer la requête (400).
   return sb("naval_rooms?code=eq." + encodeURIComponent(code), { method:"PATCH", body });
 };
 
@@ -260,7 +251,7 @@ function show(name, back){
    ÉCRAN "MODE"
    ============================================================ */
 function bindModeScreen(){
-  $$(".pick[data-mode]").forEach(b => b.addEventListener("click", () => {
+  $$(".role-card[data-mode]").forEach(b => b.addEventListener("click", () => {
     SFX.tap();
     const m = b.dataset.mode;
     if(m === "solo"){ S.mode = "solo"; show("solo", "mode"); }
@@ -283,7 +274,7 @@ function bindModeScreen(){
    ÉCRAN "NIVEAU SOLO"
    ============================================================ */
 function bindSoloScreen(){
-  $$(".pick[data-diff]").forEach(b => b.addEventListener("click", () => {
+  $$(".role-card[data-diff]").forEach(b => b.addEventListener("click", () => {
     S.diff = parseInt(b.dataset.diff, 10);
     S.foe  = ["", "Le mousse", "Le second", "L'amiral"][S.diff];
     S.code = null; S.role = null;
@@ -315,7 +306,7 @@ async function refreshLobby(){
       "&status=eq.waiting&guest_name=is.null&order=created_at.desc&limit=12");
     const mine = await sb("naval_rooms?select=*" +
       "&or=(host_name.eq." + me + ",guest_name.eq." + me + ")" +
-      "&status=in.(placing,playing)&order=updated_at.desc&limit=5");
+      "&status=in.(placing,playing)&order=created_at.desc&limit=5");
     renderLobby(open || [], mine || []);
   }catch(e){
     $("#openRooms").innerHTML = '<p class="muted">Liste des salons indisponible. Le code fonctionne toujours.</p>';
@@ -335,7 +326,7 @@ function renderLobby(open, mine){
         return '<button class="room" data-resume="' + escAttr(r.code) + '">' +
                '<span class="rc">' + escAttr(r.code) + '</span>' +
                '<span class="ri"><span class="rh">contre ' + escAttr(foe) + '</span>' +
-               '<span class="rt">' + state + ' · ' + ago(r.updated_at || r.created_at) + '</span></span>' +
+               '<span class="rt">' + state + ' · ' + ago(r.created_at) + '</span></span>' +
                '<span class="go">▶</span></button>';
       }).join("") + '</div>';
   }else{
@@ -389,6 +380,13 @@ function startLobbyWatch(){
 function bindHostRoomButton(){
   $("#btnHost").addEventListener("click", async () => {
     if(!CONFIG_OK) return;
+    // Si ce profil a déjà un salon ouvert (précédemment créé puis quitté sans
+    // le fermer), on le reprend au lieu d'en ouvrir un doublon.
+    try{
+      const mine = await sb("naval_rooms?select=code&host_name=eq." + encodeURIComponent(S.profile.name) +
+        "&status=in.(waiting,placing,playing)&order=created_at.desc&limit=1");
+      if(mine && mine[0]){ return resumeRoom(mine[0].code); }
+    }catch(e){ /* pas grave, on retombe sur la création d'un nouveau salon */ }
     const code = makeCode();
     try{
       await sb("naval_rooms", { method:"POST", body:{
@@ -913,33 +911,28 @@ function bindEndScreen(){
    ============================================================ */
 function shellHtml(){
   return `
-    <div class="mini-topbar">
-      <div class="mascot">🐼</div>
-      <div>
-        <h2>Bataille Navale de la Tribu</h2>
-        <div class="sub" id="whoami"></div>
-      </div>
-      <div class="spacer"></div>
-      <button class="backlink hidden" id="btnBack">‹ Retour</button>
-    </div>
+    <button class="btn btn-ghost btn-sm hidden" id="btnBack" style="margin-bottom:14px;">‹ Retour</button>
 
     <section class="screen on" data-screen="mode">
+      <div class="card" style="text-align:center;padding:18px;">
+        <img src="./naval-logo.png" alt="Bataille Navale de la Tribu" style="width:100%;max-width:420px;border-radius:20px;">
+      </div>
       <div class="card">
         <h2>Quelle bataille ?</h2>
         <p class="lead">Flotte de 17 cases à couler. Touché, on rejoue.</p>
-        <div class="picks">
-          <button class="pick" data-mode="solo">
-            <span class="ico">🤖</span><span class="t">Contre l'ordinateur</span>
-            <span class="d">Une partie tout de suite, hors ligne. Trois niveaux, du mousse à l'amiral.</span>
-          </button>
-          <button class="pick" data-mode="multi">
-            <span class="ico">📡</span><span class="t">Duel en famille</span>
-            <span class="d">Deux appareils. Rejoins un salon ouvert d'un tap, ou entre un code.</span>
-          </button>
-          <button class="pick" data-mode="histo">
-            <span class="ico">📜</span><span class="t">Historique</span>
-            <span class="d">Le palmarès de la tribu et les dernières batailles jouées.</span>
-          </button>
+        <div class="role-grid role-grid-3">
+          <div class="role-card" data-mode="solo">
+            <div class="emoji">🤖</div><h3>Contre l'ordinateur</h3>
+            <p>Une partie tout de suite, hors ligne. Trois niveaux, du mousse à l'amiral.</p>
+          </div>
+          <div class="role-card" data-mode="multi">
+            <div class="emoji">📡</div><h3>Duel en famille</h3>
+            <p>Deux appareils. Rejoins un salon ouvert d'un tap, ou entre un code.</p>
+          </div>
+          <div class="role-card" data-mode="histo">
+            <div class="emoji">📜</div><h3>Historique</h3>
+            <p>Le palmarès de la tribu et les dernières batailles jouées.</p>
+          </div>
         </div>
       </div>
     </section>
@@ -948,10 +941,10 @@ function shellHtml(){
       <div class="card">
         <h2>Ton adversaire</h2>
         <p class="lead">Plus le niveau monte, plus il vise juste après un premier tir touché.</p>
-        <div class="picks">
-          <button class="pick" data-diff="1"><span class="ico">🧢</span><span class="t">Mousse</span><span class="d">Tire complètement au hasard. Parfait pour les petits.</span></button>
-          <button class="pick" data-diff="2"><span class="ico">🎖️</span><span class="t">Second</span><span class="d">Achève un navire touché en explorant les cases voisines.</span></button>
-          <button class="pick" data-diff="3"><span class="ico">⚓</span><span class="t">Amiral</span><span class="d">Quadrille en damier et suit l'axe d'un navire touché. Redoutable.</span></button>
+        <div class="role-grid role-grid-3">
+          <div class="role-card" data-diff="1"><div class="emoji">🧢</div><h3>Mousse</h3><p>Tire complètement au hasard. Parfait pour les petits.</p></div>
+          <div class="role-card" data-diff="2"><div class="emoji">🎖️</div><h3>Second</h3><p>Achève un navire touché en explorant les cases voisines.</p></div>
+          <div class="role-card" data-diff="3"><div class="emoji">⚓</div><h3>Amiral</h3><p>Quadrille en damier et suit l'axe d'un navire touché. Redoutable.</p></div>
         </div>
       </div>
     </section>
@@ -964,9 +957,9 @@ function shellHtml(){
           <div class="status info" id="resumeBox" hidden></div>
           <label class="field-label">Salons en attente d'un adversaire</label>
           <div id="openRooms" class="rooms"></div>
-          <div class="picks" style="margin-top:18px">
-            <button class="pick" id="btnHost"><span class="ico">🏳️</span><span class="t">Ouvrir un salon</span><span class="d">Ton salon apparaît aussitôt dans la liste des autres, avec un code de secours.</span></button>
-            <button class="pick" id="btnJoinPick"><span class="ico">🔑</span><span class="t">Entrer un code</span><span class="d">Si le salon ne s'affiche pas dans la liste.</span></button>
+          <div class="role-grid" style="margin-top:18px">
+            <div class="role-card" id="btnHost"><div class="emoji">🏳️</div><h3>Ouvrir un salon</h3><p>Ton salon apparaît aussitôt dans la liste des autres, avec un code de secours.</p></div>
+            <div class="role-card" id="btnJoinPick"><div class="emoji">🔑</div><h3>Entrer un code</h3><p>Si le salon ne s'affiche pas dans la liste.</p></div>
           </div>
         </div>
         <div id="multiJoin" class="hidden">
@@ -1077,7 +1070,6 @@ export async function mountNaval(container){
   S.profile = { name: activeProfile.name, avatar: activeProfile.avatar, isGuest: !!activeProfile.isGuest };
 
   root.innerHTML = shellHtml();
-  $("#whoami").textContent = "Capitaine " + S.profile.name;
   $("#btnBack").addEventListener("click", () => {
     leaveRoomChannel();
     stopFallback();
@@ -1092,7 +1084,13 @@ export async function mountNaval(container){
   bindBattleScreen();
   bindEndScreen();
 
-  show("mode");
+  // Si un duel était déjà en cours (l'utilisateur a juste changé d'écran et
+  // revient), on le reprend au lieu de repartir du menu principal.
+  if(S.mode === "multi" && S.code){
+    resumeRoom(S.code);
+  }else{
+    show("mode");
+  }
 
   return () => {
     // Nettoyage à la navigation hors de la bataille navale.
