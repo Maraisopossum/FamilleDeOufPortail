@@ -30,7 +30,7 @@ if (!document.getElementById("naval-styles")) {
   .naval-screen .grid-shell.small{max-width:290px;}
   .naval-screen .grid{display:grid;grid-template-columns:repeat(11,minmax(0,1fr));grid-template-rows:repeat(11,minmax(0,1fr));gap:2px;aspect-ratio:1;position:relative;z-index:1;}
   .naval-screen .lbl{display:grid;place-items:center;font-size:clamp(8px,1.9vw,11px);color:var(--muted);font-weight:600;}
-  .naval-screen .c{border:0;padding:0;border-radius:4px;cursor:default;background:rgba(91,141,238,.14);display:grid;place-items:center;font-size:clamp(9px,2.4vw,15px);line-height:1;transition:background .15s ease, transform .1s ease;}
+  .naval-screen .c{appearance:none;-webkit-appearance:none;border:0;padding:0;margin:0;border-radius:4px;cursor:default;background:rgba(91,141,238,.14);display:grid;place-items:center;font-size:clamp(9px,2.4vw,15px);line-height:1;transition:background .15s ease, transform .1s ease;}
   .naval-screen .grid.playable .c.free{cursor:crosshair;}
   .naval-screen .grid.playable .c.free:hover{background:rgba(255,200,87,.35);}
   .naval-screen .c.ship{background:var(--panel);box-shadow:inset 0 0 0 2px rgba(184,169,217,.55);}
@@ -74,8 +74,9 @@ if (!document.getElementById("naval-styles")) {
   .naval-screen .center{text-align:center;}
   .naval-screen .hidden{display:none !important;}
   @media (max-width:560px){
-    .naval-screen .board-box{padding:10px;}
-    .naval-screen .grid-shell.small{max-width:230px;}
+    .naval-screen .card{padding:16px 6px;}
+    .naval-screen .board-box{padding:4px;}
+    .naval-screen .grid-shell.small{max-width:290px;}
   }
   @media (prefers-reduced-motion:reduce){ .naval-screen *{animation:none !important;transition:none !important;} }
   `;
@@ -220,7 +221,8 @@ const S = {
   over    : false,
   ended   : false,
   busy    : false,
-  fallback: null           // filet de sécurité si Realtime est coupé
+  fallback: null,          // filet de sécurité si Realtime est coupé
+  foeShipsReveal: null     // flotte adverse à révéler sur l'écran de fin
 };
 
 /* ---------- plateau ---------- */
@@ -559,7 +561,7 @@ let selShip = null, horiz = true;
 function startPlacement(){
   S.my = newBoard();
   S.myShots = {}; S.foeShots = {}; S.foeSunk = new Set();
-  S.over = false; S.ended = false;
+  S.over = false; S.ended = false; S.foeShipsReveal = null;
   selShip = FLEET_DEF[0].id;
   horiz = true;
   $("#waitOpponent").classList.add("hidden");
@@ -589,11 +591,12 @@ function buildGrid(el){
 }
 
 function paintPlacement(){
-  const occ = new Set();
-  S.my.ships.forEach(s => s.cells.forEach(c => occ.add(k(c[0],c[1]))));
+  const occ = new Map();
+  S.my.ships.forEach(s => s.cells.forEach(c => occ.set(k(c[0],c[1]), s.emoji)));
   $$("#placeGrid .c").forEach(c => {
-    c.className = "c" + (occ.has(k(+c.dataset.x, +c.dataset.y)) ? " ship" : " free");
-    c.textContent = "";
+    const emoji = occ.get(k(+c.dataset.x, +c.dataset.y));
+    c.className = "c" + (emoji ? " ship" : " free");
+    c.textContent = emoji || "";
   });
   const placed = S.my.ships.filter(s => s.cells.length).length;
   $("#placeLeft").textContent = placed === 5 ? "Flotte complète" : (5 - placed) + " navire(s) à poser";
@@ -725,6 +728,7 @@ async function onRoomUpdate(r){
 
   if(r.status === "finished" && !S.ended){
     S.over = true;
+    S.foeShipsReveal = (S.role === "host" ? r.guest_ships : r.host_ships) || null;
     finish(r.winner === S.profile.name);
   }
 }
@@ -753,13 +757,14 @@ function paintBattle(){
     c.className = "c" + (r ? " " + r : " free");
     c.textContent = r === "miss" ? "•" : (r ? "✕" : "");
   });
-  const mine = new Set();
-  S.my.ships.forEach(s => s.cells.forEach(c => mine.add(k(c[0],c[1]))));
+  const mine = new Map();
+  S.my.ships.forEach(s => s.cells.forEach(c => mine.set(k(c[0],c[1]), s.emoji)));
   $$("#myGrid .c").forEach(c => {
     const key = k(+c.dataset.x, +c.dataset.y);
     const r = S.foeShots[key];
-    c.className = "c" + (mine.has(key) ? " ship" : "") + (r ? " " + r : "");
-    c.textContent = r === "miss" ? "•" : (r ? "✕" : "");
+    const emoji = mine.get(key);
+    c.className = "c" + (emoji ? " ship" : "") + (r ? " " + r : "");
+    c.textContent = r === "miss" ? "•" : (r ? "✕" : (emoji || ""));
   });
 
   const foeAlive = (S.mode === "solo") ? aliveCount(S.foeBoard) : 5 - (S.foeSunk ? S.foeSunk.size : 0);
@@ -805,7 +810,7 @@ function bindBattleScreen(){
     if(S.mode === "solo"){
       const r = resolve(S.foeBoard, x, y);
       applyMyShot(x, y, r);
-      if(allSunk(S.foeBoard)) return finish(true);
+      if(allSunk(S.foeBoard)){ S.foeShipsReveal = S.foeBoard.ships; return finish(true); }
       if(r.result === "miss"){ S.myTurn = false; paintBattle(); setTimeout(aiTurn, 900); }
       else paintBattle();
       return;
@@ -832,7 +837,7 @@ function bindBattleScreen(){
       await roomPatch(S.code, patch);
       S.myTurn = !won && patch.turn === S.role;
       paintBattle();
-      if(won){ S.over = true; finish(true); }
+      if(won){ S.over = true; S.foeShipsReveal = foeBoard.ships; finish(true); }
     }catch(err){
       logLine("<b>Tir non transmis</b> — vérifie la connexion, puis retente.");
       S.myTurn = true;
@@ -844,7 +849,13 @@ function bindBattleScreen(){
   $("#btnAbandon").addEventListener("click", async () => {
     if(!confirm("Abandonner la partie en cours ?")) return;
     if(S.mode === "multi" && S.code){
-      try{ await roomPatch(S.code, { status:"finished", winner:S.foe }); }catch(e){}
+      try{
+        const room = await roomLoad(S.code);
+        S.foeShipsReveal = (room && (S.role === "host" ? room.guest_ships : room.host_ships)) || null;
+        await roomPatch(S.code, { status:"finished", winner:S.foe });
+      }catch(e){}
+    }else if(S.mode === "solo"){
+      S.foeShipsReveal = S.foeBoard.ships;
     }
     S.over = true;
     finish(false, true);
@@ -895,7 +906,7 @@ async function aiTurn(){
       S.ai.queue = [];
     }
     paintBattle();
-    if(allSunk(S.my)) return finish(false);
+    if(allSunk(S.my)){ S.foeShipsReveal = S.foeBoard.ships; return finish(false); }
     again = (r.result !== "miss");
     if(again) await sleep(750);
   }
@@ -929,6 +940,7 @@ async function finish(won, abandoned){
   $("#stAcc").textContent   = acc + " %";
   won ? SFX.win() : SFX.lose();
   show("end");
+  paintFoeReveal();
 
   const msg = $("#saveMsg");
   if(CONFIG_OK && !S.profile.isGuest){
@@ -953,6 +965,23 @@ async function finish(won, abandoned){
     msg.hidden = false; msg.className = "status info";
     msg.textContent = "Partie jouée en invité : le score n'est pas enregistré dans l'historique.";
   }
+}
+function paintFoeReveal(){
+  const box = $("#foeRevealBox");
+  const ships = S.foeShipsReveal;
+  if(!box) return;
+  if(!ships || !ships.length){ box.classList.add("hidden"); return; }
+  box.classList.remove("hidden");
+  $("#foeRevealName").textContent = S.foe || "l'adversaire";
+  const grid = $("#foeRevealGrid");
+  buildGrid(grid);
+  const cells = new Map();
+  ships.forEach(s => (s.cells || []).forEach(c => cells.set(k(c[0],c[1]), s.emoji)));
+  $$("#foeRevealGrid .c").forEach(c => {
+    const emoji = cells.get(k(+c.dataset.x, +c.dataset.y));
+    c.className = "c" + (emoji ? " ship" : "");
+    c.textContent = emoji || "";
+  });
 }
 function bindEndScreen(){
   $("#btnAgain").addEventListener("click", () => {
@@ -1113,6 +1142,10 @@ function shellHtml(){
           <div class="stat"><div class="v" id="stAcc">0 %</div><div class="k">Précision</div></div>
         </div>
         <div class="status ok" id="saveMsg" hidden></div>
+        <div id="foeRevealBox" class="hidden" style="margin-top:22px;">
+          <h3 style="margin:0 0 10px;font-size:15px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;">La flotte de <span id="foeRevealName">l'adversaire</span></h3>
+          <div class="grid-shell small" style="margin:0 auto;"><div class="grid" id="foeRevealGrid"></div></div>
+        </div>
         <div class="btn-row" style="justify-content:center;margin-top:20px">
           <button class="btn btn-gold" id="btnAgain">Rejouer</button>
           <button class="btn btn-ghost" id="btnHome">Retour à l'accueil</button>

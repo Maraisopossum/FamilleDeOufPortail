@@ -5,6 +5,7 @@
   --text:#f6f2ff; --muted:#b8a9d9; --wrong:#ff5d73;
 }
 *{box-sizing:border-box;}
+button{ appearance:none; -webkit-appearance:none; font:inherit; color:inherit; }
 html,body{ margin:0; padding:0; min-height:100vh;
   background: radial-gradient(circle at 20% -10%, #3a2263 0%, var(--bg) 55%);
   background-attachment:fixed;

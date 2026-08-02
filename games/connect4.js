@@ -462,12 +462,13 @@ async function onRoomUpdate(r){
     return;
   }
 
+  let foeJustArrived = false;
   if(S.role === "host" && r.guest_name && S.foe !== r.guest_name){
     S.foe = r.guest_name;
-    const foeEl = $("#foeName"); if(foeEl) foeEl.textContent = S.foe;
+    foeJustArrived = true;
   }
 
-  if(JSON.stringify(r.board) !== JSON.stringify(S.board)){
+  if(foeJustArrived || JSON.stringify(r.board) !== JSON.stringify(S.board)){
     S.board = r.board || newBoard();
     S.turn = r.turn;
     paintBoard();
@@ -495,6 +496,11 @@ function startGame(){
 function paintBoard(){
   const board = $("#c4Board");
   if(!board) return;
+  const foeEl = $("#foeName");
+  if(foeEl) foeEl.textContent = S.mode === "solo" ? S.foe : (S.foe || "adversaire à venir");
+  const dotMe = $("#c4DotMe"), dotFoe = $("#c4DotFoe");
+  if(dotMe) dotMe.className = "c4-dot " + myOwner();
+  if(dotFoe) dotFoe.className = "c4-dot " + foeOwner();
   const lastCell = board.dataset.lastCell || "";
   let html = "";
   for(let c=0;c<COLS;c++){
@@ -816,8 +822,8 @@ function shellHtml(){
           <div class="c4-board" id="c4Board"></div>
         </div>
         <div class="c4-legend">
-          <span><span class="c4-dot host"></span>Toi</span>
-          <span><span class="c4-dot guest"></span>Adversaire</span>
+          <span><span class="c4-dot" id="c4DotMe"></span>Toi</span>
+          <span><span class="c4-dot" id="c4DotFoe"></span>Adversaire</span>
         </div>
         <div class="btn-row" style="justify-content:center;margin-top:18px">
           <button class="btn btn-ghost btn-sm hidden" id="btnCancelGame">Annuler le salon</button>

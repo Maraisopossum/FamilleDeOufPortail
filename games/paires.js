@@ -482,12 +482,14 @@ async function onRoomUpdate(r){
     return;
   }
 
+  let foeJustArrived = false;
   if(S.role === "host" && r.guest_name && S.foe !== r.guest_name){
     S.foe = r.guest_name;
-    const foeEl = $("#foeName"); if(foeEl) foeEl.textContent = S.foe;
+    foeJustArrived = true;
   }
 
   const changed = !S.busy && (
+    foeJustArrived ||
     JSON.stringify(r.matched) !== JSON.stringify(S.matched) ||
     r.turn !== S.turn ||
     (r.host_score||0) !== S.hostScore ||
@@ -528,6 +530,8 @@ function buildBoard(){
 function paintBoard(){
   const board = $("#prBoard");
   if(!board) return;
+  const foeEl = $("#foeName");
+  if(foeEl) foeEl.textContent = S.mode === "solo" ? "toi-même" : (S.foe || "adversaire à venir");
   board.innerHTML = S.layout.map((sym, i) => {
     const isMatched = S.matched[i];
     const isFlipped = S.flipped.includes(i);

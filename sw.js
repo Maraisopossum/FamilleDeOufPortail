@@ -2,7 +2,7 @@
    Règle d'or : on ne met en cache QUE la coquille statique.
    Tout ce qui touche Supabase (données dynamiques) passe toujours par le réseau. */
 
-const CACHE = "jeux-famille-shell-v4";
+const CACHE = "jeux-famille-shell-v5";
 const SHELL = [
   "./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png",
   "./logo.png", "./quiz-logo.png", "./naval-logo.png", "./puissance4-logo.png", "./paire-logo.png",
