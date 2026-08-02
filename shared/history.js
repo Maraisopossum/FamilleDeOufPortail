@@ -4,7 +4,7 @@
 import { supabase, CONFIG_OK } from "./supabase-client.js";
 import { getActiveProfile } from "./profile.js";
 
-export const GAMES = ["Quiz de la Tribu", "Bataille Navale", "Puissance 4 de la Tribu"];
+export const GAMES = ["Quiz de la Tribu", "Bataille Navale", "Puissance 4 de la Tribu", "Jeu des Paires de la Tribu"];
 
 function escAttr(str) {
   return String(str == null ? "" : str).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
