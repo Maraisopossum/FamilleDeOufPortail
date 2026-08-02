@@ -51,6 +51,10 @@ if (!document.getElementById("connect4-styles")) {
   .connect4-screen .c4-dot{width:14px;height:14px;border-radius:50%;display:inline-block;}
   .connect4-screen .c4-dot.host{background:var(--coral);}
   .connect4-screen .c4-dot.guest{background:var(--gold);}
+  @media (max-width:560px){
+    .connect4-screen .card{padding:16px 6px;}
+    .connect4-screen .c4-board{padding:8px;gap:4px;}
+  }
   @media (prefers-reduced-motion:reduce){ .connect4-screen *{animation:none !important;transition:none !important;} }
   `;
   document.head.appendChild(style);
@@ -608,6 +612,7 @@ async function finish(won, draw){
       : (S.foe || "L'adversaire") + " a aligné ses 4 pions avant toi. Revanche ?";
   draw ? SFX.tap() : (won ? SFX.win() : SFX.lose());
   show("end");
+  paintEndBoard();
 
   const msg = $("#saveMsg");
   if(CONFIG_OK && !S.profile.isGuest){
@@ -630,6 +635,23 @@ async function finish(won, draw){
   }else{
     msg.hidden = true;
   }
+}
+function paintEndBoard(){
+  const board = $("#c4EndBoard");
+  if(!board) return;
+  const lastCell = $("#c4Board") ? $("#c4Board").dataset.lastCell || "" : "";
+  let html = "";
+  for(let c=0;c<COLS;c++){
+    html += '<div class="c4-col" data-col="' + c + '">';
+    for(let r=0; r<ROWS; r++){
+      const owner = ownerAt(S.board, c, r);
+      const cls = owner === "host" ? " host" : owner === "guest" ? " guest" : "";
+      const isLast = lastCell === c + "," + r;
+      html += '<div class="c4-cell' + cls + (isLast ? " last" : "") + '"></div>';
+    }
+    html += "</div>";
+  }
+  board.innerHTML = html;
 }
 function bindEndScreen(){
   $("#btnAgain").addEventListener("click", () => {
@@ -836,6 +858,7 @@ function shellHtml(){
         <div style="font-size:56px" id="endIcon">🏆</div>
         <h2 id="endTitle">Victoire !</h2>
         <p class="lead" id="endText"></p>
+        <div class="c4-board" id="c4EndBoard" style="margin:14px auto;"></div>
         <div class="status ok" id="saveMsg" hidden></div>
         <div class="btn-row" style="justify-content:center;margin-top:20px">
           <button class="btn btn-gold" id="btnAgain">Rejouer</button>

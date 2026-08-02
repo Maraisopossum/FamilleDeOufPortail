@@ -50,6 +50,10 @@ if (!document.getElementById("paires-styles")) {
   .paires-screen .pr-stats{display:flex;flex-wrap:wrap;gap:18px;margin-top:16px;justify-content:center;}
   .paires-screen .pr-stat .v{font-family:'Kalam',cursive;font-weight:700;font-size:26px;color:var(--gold);line-height:1;}
   .paires-screen .pr-stat .k{font-size:12px;color:var(--muted);margin-top:2px;text-align:center;}
+  @media (max-width:560px){
+    .paires-screen .card{padding:16px 6px;}
+    .paires-screen .pr-board{gap:5px;}
+  }
   @media (prefers-reduced-motion:reduce){ .paires-screen *{animation:none !important;transition:none !important;} }
   `;
   document.head.appendChild(style);
