@@ -30,10 +30,11 @@ if (!document.getElementById("naval-styles")) {
   .naval-screen .grid-shell.small{max-width:290px;}
   .naval-screen .grid{display:grid;grid-template-columns:repeat(11,minmax(0,1fr));grid-template-rows:repeat(11,minmax(0,1fr));gap:2px;aspect-ratio:1;position:relative;z-index:1;}
   .naval-screen .lbl{display:grid;place-items:center;font-size:clamp(8px,1.9vw,11px);color:var(--muted);font-weight:600;}
-  .naval-screen .c{appearance:none;-webkit-appearance:none;border:0;padding:0;margin:0;border-radius:4px;cursor:default;background:rgba(91,141,238,.14);display:grid;place-items:center;font-size:clamp(9px,2.4vw,15px);line-height:1;transition:background .15s ease, transform .1s ease;}
+  .naval-screen .c{appearance:none;-webkit-appearance:none;border:0;padding:0;margin:0;border-radius:4px;cursor:default;background:rgba(91,141,238,.14);display:grid;place-items:center;overflow:hidden;font-size:clamp(9px,2.4vw,15px);line-height:1;transition:background .15s ease, transform .1s ease;}
+  .naval-screen .ship-emoji{display:flex;flex-shrink:0;align-items:center;justify-content:center;width:80%;height:80%;font-size:80%;overflow:hidden;}
   .naval-screen .grid.playable .c.free{cursor:crosshair;}
   .naval-screen .grid.playable .c.free:hover{background:rgba(255,200,87,.35);}
-  .naval-screen .c.ship{background:var(--panel);box-shadow:inset 0 0 0 2px rgba(184,169,217,.55);}
+  .naval-screen .c.has-ship{background:var(--panel);box-shadow:inset 0 0 0 2px rgba(184,169,217,.55);}
   .naval-screen .c.miss{background:rgba(91,141,238,.28);}
   .naval-screen .c.hit{background:rgba(255,93,115,.55);}
   .naval-screen .c.sunk{background:var(--coral);}
@@ -585,7 +586,7 @@ function buildGrid(el){
   for(let x=0;x<N;x++) html += '<div class="lbl">' + COLS[x] + '</div>';
   for(let y=0;y<N;y++){
     html += '<div class="lbl">' + (y+1) + '</div>';
-    for(let x=0;x<N;x++) html += '<button class="c" data-x="' + x + '" data-y="' + y + '" aria-label="' + coord(x,y) + '"></button>';
+    for(let x=0;x<N;x++) html += '<div class="c" data-x="' + x + '" data-y="' + y + '" role="button" aria-label="' + coord(x,y) + '"></div>';
   }
   el.innerHTML = html;
 }
@@ -595,8 +596,8 @@ function paintPlacement(){
   S.my.ships.forEach(s => s.cells.forEach(c => occ.set(k(c[0],c[1]), s.emoji)));
   $$("#placeGrid .c").forEach(c => {
     const emoji = occ.get(k(+c.dataset.x, +c.dataset.y));
-    c.className = "c" + (emoji ? " ship" : " free");
-    c.textContent = emoji || "";
+    c.className = "c" + (emoji ? " has-ship" : " free");
+    c.innerHTML = emoji ? '<span class="ship-emoji">' + emoji + '</span>' : "";
   });
   const placed = S.my.ships.filter(s => s.cells.length).length;
   $("#placeLeft").textContent = placed === 5 ? "Flotte complète" : (5 - placed) + " navire(s) à poser";
@@ -763,8 +764,8 @@ function paintBattle(){
     const key = k(+c.dataset.x, +c.dataset.y);
     const r = S.foeShots[key];
     const emoji = mine.get(key);
-    c.className = "c" + (emoji ? " ship" : "") + (r ? " " + r : "");
-    c.textContent = r === "miss" ? "•" : (r ? "✕" : (emoji || ""));
+    c.className = "c" + (emoji ? " has-ship" : "") + (r ? " " + r : "");
+    c.innerHTML = r === "miss" ? "•" : (r ? "✕" : (emoji ? '<span class="ship-emoji">' + emoji + '</span>' : ""));
   });
 
   const foeAlive = (S.mode === "solo") ? aliveCount(S.foeBoard) : 5 - (S.foeSunk ? S.foeSunk.size : 0);
@@ -979,8 +980,8 @@ function paintFoeReveal(){
   ships.forEach(s => (s.cells || []).forEach(c => cells.set(k(c[0],c[1]), s.emoji)));
   $$("#foeRevealGrid .c").forEach(c => {
     const emoji = cells.get(k(+c.dataset.x, +c.dataset.y));
-    c.className = "c" + (emoji ? " ship" : "");
-    c.textContent = emoji || "";
+    c.className = "c" + (emoji ? " has-ship" : "");
+    c.innerHTML = emoji ? '<span class="ship-emoji">' + emoji + '</span>' : "";
   });
 }
 function bindEndScreen(){
