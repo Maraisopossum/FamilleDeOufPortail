@@ -284,15 +284,50 @@ function bindModeScreen(){
    ============================================================ */
 function startSolo(){
   S.mode = "solo"; S.role = "host";
-  S.myTarget = randomCharId();          // ce que l'IA doit deviner (toi)
-  S.foeTarget = randomCharId(S.myTarget); // ce que tu dois deviner (l'IA)
-  S.eliminated = [];
-  S.aiEliminated = [];
-  S.turn = "host"; // tu commences
-  S.pendingQuestion = null;
-  S.over = false; S.ended = false;
   S.foe = "l'ordinateur";
-  startGame();
+  showCharacterPicker("l'ordinateur", (picked) => {
+    S.myTarget = picked;                          // ce que l'IA doit deviner (toi)
+    S.foeTarget = randomCharId(picked);            // ce que tu dois deviner (l'IA)
+    S.eliminated = [];
+    S.aiEliminated = [];
+    S.turn = "host"; // tu commences
+    S.pendingQuestion = null;
+    S.over = false; S.ended = false;
+    startGame();
+  });
+}
+
+/* ============================================================
+   ÉCRAN "CHOISIS TON PERSONNAGE"
+   ============================================================ */
+let pickCallback = null;
+let pickExcludeId = null;
+function showCharacterPicker(forWhomText, onPicked, excludeId){
+  pickCallback = onPicked;
+  pickExcludeId = excludeId || null;
+  $("#pickForWhom").textContent = forWhomText || "l'adversaire";
+  $("#qwPickBoard").innerHTML = CHARACTERS.map(c => {
+    if(c.id === pickExcludeId){
+      return '<div class="qw-card eliminated" title="Déjà pris par l\'hôte">' +
+        '<div class="qw-portrait"><img src="./guesswho-images/' + c.img + '" alt="' + escAttr(c.name) + '" onerror="this.parentElement.parentElement.classList.add(\'img-fallback\')"><span class="qw-fallback">' + c.name.charAt(0) + '</span></div>' +
+        '<div class="qw-name">' + escAttr(c.name) + '</div></div>';
+    }
+    return cardHtml(c, false);
+  }).join("");
+  show("pick");
+}
+function bindPickScreen(){
+  $("#qwPickBoard").addEventListener("click", (e) => {
+    const card = e.target.closest(".qw-card");
+    if(!card || !pickCallback || card.dataset.char === undefined) return;
+    if(card.dataset.char === pickExcludeId) return;
+    const char = charById(card.dataset.char);
+    if(!char) return;
+    if(!confirm("Tu choisis " + char.name + " comme personnage mystère ?")) return;
+    const cb = pickCallback;
+    pickCallback = null;
+    cb(char.id);
+  });
 }
 function aiPickTrait(){
   // Choisit le trait qui coupe le plus près en deux le nombre de candidats restants.
@@ -452,24 +487,26 @@ function bindHostRoomButton(){
         "&status=in.(waiting,playing)&order=created_at.desc&limit=1");
       if(mine && mine[0]){ return resumeRoom(mine[0].code); }
     }catch(e){}
-    const code = makeCode();
-    const myTarget = randomCharId();
-    try{
-      await sb("guesswho_rooms", { method:"POST", body:{
-        code, host_name:S.profile.name, status:"waiting", turn:"host",
-        host_target: myTarget, host_eliminated: [], guest_eliminated: []
-      }});
-    }catch(e){
-      $("#multiErr").hidden = false;
-      $("#multiErr").textContent = "Le salon n'a pas pu être ouvert. Vérifie la table guesswho_rooms.";
-      return;
-    }
-    S.role = "host"; S.code = code; S.foe = "";
-    S.myTarget = myTarget; S.eliminated = [];
-    S.turn = "host"; S.pendingQuestion = null; S.lastSeenSeq = 0;
-    S.over = false; S.ended = false;
-    joinRoomChannel(code);
-    startGame();
+    showCharacterPicker("ton futur adversaire", async (myTarget) => {
+      const code = makeCode();
+      try{
+        await sb("guesswho_rooms", { method:"POST", body:{
+          code, host_name:S.profile.name, status:"waiting", turn:"host",
+          host_target: myTarget, host_eliminated: [], guest_eliminated: []
+        }});
+      }catch(e){
+        $("#multiErr").hidden = false;
+        $("#multiErr").textContent = "Le salon n'a pas pu être ouvert. Vérifie la table guesswho_rooms.";
+        show("multi");
+        return;
+      }
+      S.role = "host"; S.code = code; S.foe = "";
+      S.myTarget = myTarget; S.eliminated = [];
+      S.turn = "host"; S.pendingQuestion = null; S.lastSeenSeq = 0;
+      S.over = false; S.ended = false;
+      joinRoomChannel(code);
+      startGame();
+    });
   });
   $("#btnJoinPick").addEventListener("click", () => {
     $("#multiChoice").classList.add("hidden");
@@ -489,14 +526,22 @@ async function joinRoom(code){
     if(r.host_name === S.profile.name) return resumeRoom(code);
     if(r.guest_name && r.guest_name !== S.profile.name) throw new Error("plein");
     if(r.guest_name === S.profile.name) return resumeRoom(code);
-    const myTarget = randomCharId(r.host_target);
-    await roomPatch(code, { guest_name:S.profile.name, guest_target:myTarget, status:"playing" });
-    S.role = "guest"; S.code = code; S.foe = r.host_name;
-    S.myTarget = myTarget; S.eliminated = [];
-    S.turn = r.turn || "host"; S.pendingQuestion = r.pending_question || null; S.lastSeenSeq = r.seq || 0;
-    S.over = false; S.ended = false;
-    joinRoomChannel(code);
-    startGame();
+    showCharacterPicker(r.host_name, async (myTarget) => {
+      try{
+        await roomPatch(code, { guest_name:S.profile.name, guest_target:myTarget, status:"playing" });
+      }catch(e2){
+        $("#multiErr").hidden = false;
+        $("#multiErr").textContent = "Impossible de rejoindre ce salon.";
+        show("multi");
+        return;
+      }
+      S.role = "guest"; S.code = code; S.foe = r.host_name;
+      S.myTarget = myTarget; S.eliminated = [];
+      S.turn = r.turn || "host"; S.pendingQuestion = r.pending_question || null; S.lastSeenSeq = r.seq || 0;
+      S.over = false; S.ended = false;
+      joinRoomChannel(code);
+      startGame();
+    }, r.host_target);
   }catch(e){
     $("#multiErr").hidden = false;
     $("#multiErr").textContent = e.message === "plein"
@@ -676,7 +721,6 @@ function bindGameScreen(){
       accuse(charId);
       return;
     }
-    if(S.mode === "solo") return; // en solo, le plateau n'affiche que des repères visuels
     toggleEliminated(charId);
   });
   $("#qwTraits").addEventListener("click", (e) => {
@@ -709,9 +753,7 @@ async function askTrait(traitId){
     const trait = traitById(traitId);
     const foeChar = charById(S.foeTarget);
     const answer = trait.test(foeChar);
-    S.eliminated = CHARACTERS.filter(c => trait.test(c) !== answer).map(c => c.id)
-      .concat(S.eliminated).filter((v,i,a) => a.indexOf(v)===i);
-    logMessage('Tu demandes : "' + trait.label + '" → <b>' + (answer ? "Oui" : "Non") + '</b>.');
+    logMessage('Tu demandes : "' + trait.label + '" → <b>' + (answer ? "Oui" : "Non") + '</b>. À toi d\'éliminer les personnages qui ne correspondent plus.');
     answer ? SFX.yes() : SFX.no();
     S.turn = "ai";
     paintGame();
@@ -762,23 +804,11 @@ function reactToAnswer(a, isMine){
   if(a.wasLie && a.answeredBy === S.role){
     showMytho(trait.label);
   }else if(a.wasLie && a.askedBy === S.role){
-    logMessage('🚩 <b>' + escAttr(S.foe || "L\'adversaire") + ' a menti !</b> La vraie réponse à "' + trait.label + '" est <b>' + (a.truth ? "Oui" : "Non") + '</b>.');
-    S.eliminated = CHARACTERS.filter(c => trait.test(c) !== a.truth).map(c => c.id)
-      .concat(S.eliminated).filter((v,i,a2) => a2.indexOf(v)===i);
+    logMessage('🚩 <b>' + escAttr(S.foe || "L\'adversaire") + ' a menti !</b> La vraie réponse à "' + trait.label + '" est <b>' + (a.truth ? "Oui" : "Non") + '</b>. À toi d\'éliminer les personnages qui ne correspondent plus.');
     paintGame();
-    if(S.mode === "multi"){
-      const field = S.role === "host" ? "host_eliminated" : "guest_eliminated";
-      roomPatch(S.code, { [field]: S.eliminated }).catch(()=>{});
-    }
   }else if(a.askedBy === S.role){
-    logMessage('"' + trait.label + '" → <b>' + (a.answer ? "Oui" : "Non") + '</b>.');
-    S.eliminated = CHARACTERS.filter(c => trait.test(c) !== a.answer).map(c => c.id)
-      .concat(S.eliminated).filter((v,i,a2) => a2.indexOf(v)===i);
+    logMessage('"' + trait.label + '" → <b>' + (a.answer ? "Oui" : "Non") + '</b>. À toi d\'éliminer les personnages qui ne correspondent plus.');
     paintGame();
-    if(S.mode === "multi"){
-      const field = S.role === "host" ? "host_eliminated" : "guest_eliminated";
-      roomPatch(S.code, { [field]: S.eliminated }).catch(()=>{});
-    }
   }
 }
 function showMytho(traitLabel){
@@ -944,6 +974,14 @@ function shellHtml(){
       </div>
     </section>
 
+    <section class="screen" data-screen="pick">
+      <div class="card">
+        <h2>Choisis ton personnage</h2>
+        <p class="lead">C'est celui que <b id="pickForWhom">l'ordinateur</b> devra deviner — choisis-le bien !</p>
+        <div class="qw-board" id="qwPickBoard"></div>
+      </div>
+    </section>
+
     <section class="screen" data-screen="game">
       <div class="card">
         <div class="turnbar theirs" id="turnBar">…</div>
@@ -1005,6 +1043,7 @@ export async function mountGuessWho(container){
   });
 
   bindModeScreen();
+  bindPickScreen();
   bindLobbyDelegates();
   bindHostRoomButton();
   bindGameScreen();
