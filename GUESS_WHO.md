@@ -29,23 +29,19 @@ s'il a dit la vérité.
    personnage mystère :
    - **Réponse honnête** → la réponse (Oui/Non) s'affiche normalement chez
      toi, tu peux éliminer les personnages qui ne correspondent plus.
-   - **Mensonge** → l'écran de l'adversaire affiche immédiatement un grand
-     bandeau rouge **"MYTHO ! 🤥"** en plein écran (avec le trait sur lequel
-     il/elle a menti en dessous, en plus petit : *"Tu as menti sur : porte
-     des lunettes"*), qui reste 2-3 secondes puis disparaît. Le mensonge
-     n'est **pas** signalé automatiquement à l'adversaire — la fausse
-     réponse lui est transmise telle quelle, comme s'il s'agissait de la
-     vérité. C'est un vrai risque : bluffer peut t'aider à brouiller les
-     pistes, mais tu risques de te faire prendre en flagrant délit devant
-     toute la pièce si vous jouez ensemble sur le même canapé.
-   - *(Point ajustable : si tu préfères que l'app avertisse aussi le joueur
-     qui a posé la question — via un indice discret genre "Réponse
-     douteuse" — dis-le-moi, c'est un simple choix de règle à trancher avant
-     de coder.)*
+   - **Mensonge** → signalé **aux deux joueurs**, immédiatement :
+     - Chez le menteur : grand bandeau rouge **"MYTHO ! 🤥"** en plein écran
+       (avec le trait concerné en dessous, en plus petit : *"Tu as menti
+       sur : porte des lunettes"*), qui reste 2-3 secondes puis disparaît.
+     - Chez celui qui a posé la question : un encart **"🚩 [Nom] a menti !"**
+       apparaît, et la **vraie réponse** est affichée à la place de la
+       fausse (le mensonge est immédiatement corrigé — mentir ne trompe donc
+       personne bien longtemps, c'est surtout pour l'effet comique et le
+       risque de se faire choper devant tout le monde).
 5. À tout moment (pas seulement à son tour), un joueur peut tenter une
    **accusation directe** : "Je pense que ton personnage mystère est Léa."
    - Bonne réponse → victoire immédiate.
-   - Mauvaise réponse → le joueur perd son tour suivant (pénalité, pour
+   - Mauvaise réponse → **le joueur perd son tour suivant** (pénalité, pour
      décourager les accusations au hasard, comme dans le jeu original).
 6. Premier à deviner correctement le personnage de l'autre gagne. Résultat
    enregistré dans l'historique commun ("Qui est-ce de la Tribu").
@@ -76,16 +72,30 @@ s'il a dit la vérité.
 
 - Table `guesswho_rooms` : `code`, `host_name`, `guest_name`, `host_target`
   (id du personnage), `guest_target`, `host_eliminated` (jsonb, liste des id
-  éliminés sur le plateau de l'hôte), `guest_eliminated`, `pending_question`
-  (jsonb : `{by, trait}` — la question en attente de réponse), `turn`,
-  `status`, `winner`, `created_at`.
+  éliminés sur le plateau de l'hôte), `guest_eliminated`,
+  `pending_question` (jsonb `{by, traitId}` — question en attente de
+  réponse, `null` sinon), `last_answer` (jsonb `{traitId, answer, askedBy,
+  answeredBy, wasLie, seq}` — dernière réponse donnée, avec un compteur
+  `seq` pour que chaque client détecte une nouvelle réponse sans la
+  retraiter deux fois), `turn`, `host_skip`/`guest_skip` (bool, pénalité
+  d'accusation ratée), `status`, `winner`, `created_at`.
+- Déroulé d'un cycle question/réponse côté salon : celui dont c'est le tour
+  pose une question (`pending_question` rempli, tour inchangé) → l'adversaire
+  répond (`pending_question` vidé, `last_answer` rempli avec `wasLie`
+  calculé côté client à partir de la vraie fiche du personnage, tour donné à
+  celui qui vient de répondre). Chaque client réagit à `last_answer` une
+  seule fois grâce à `seq`.
 - `games/guesswho.js` sur le modèle de `connect4.js` / `paires.js` : mêmes
   garde-fous (annulation qui notifie l'adversaire, reprise de salon, purge
   automatique des salons abandonnés, sondage de secours en plus du temps
   réel).
-- Table `characters` (ou simple tableau JS constant, pas besoin de
-  base de données pour 24 lignes fixes) avec les traits de chaque
-  personnage — utilisée pour vérifier les réponses et faire jouer l'IA.
+- Traits interrogeables (12 questions fixes, dérivées du roster) : Homme ?
+  Femme ? Cheveux blonds / bruns / roux / noirs / gris ? Chauve ? Cheveux
+  longs ? Porte des lunettes ? Porte un chapeau ? A de la barbe ou une
+  moustache ?
+- Liste des personnages en constante JS (pas besoin de table Supabase pour
+  24 lignes fixes) — utilisée pour vérifier les réponses et faire jouer
+  l'IA.
 - Historique partagé, nom `"Qui est-ce de la Tribu"`.
 
 ## Roster des 24 personnages
@@ -330,11 +340,11 @@ déplacerai) avec les noms indiqués ci-dessus — je m'occupe ensuite
 d'implémenter `games/guesswho.js`, la table Supabase, la route et
 l'intégration au portail.
 
-## Points encore ouverts (à trancher à ton retour)
+## Décisions verrouillées
 
-1. Mensonge signalé seulement au menteur (recommandé, cf. ci-dessus), ou
-   aussi indiqué discrètement à celui qui pose la question ?
-2. Pénalité d'accusation ratée : perte du tour suivant (comme proposé), ou
-   autre règle (ex: interdiction de raccuser avant N tours) ?
-3. Mode solo vs IA : le garder tel que décrit (l'app répond pour toi), ou
-   veux-tu aussi pouvoir taper toi-même tes réponses face à l'IA ?
+1. **Mensonge signalé aux deux joueurs** — bandeau "MYTHO !" chez le
+   menteur, et la vraie réponse corrigée chez celui qui a posé la question.
+2. **Accusation ratée = perte du tour suivant.**
+3. **Mode solo vs IA inchangé** — l'app répond à ta place (pas de bouton
+   Oui/Non à taper toi-même contre l'IA, la détection de mensonge ne
+   s'applique qu'en duel humain).

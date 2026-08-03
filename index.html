@@ -41,6 +41,7 @@ function topbarHtml(activeRoute) {
     { path: "/naval", label: "🎯 Bataille navale" },
     { path: "/connect4", label: "🔴 Puissance 4" },
     { path: "/paires", label: "🎴 Jeu des Paires" },
+    { path: "/guesswho", label: "🕵️ Qui est-ce" },
     { path: "/historique", label: "📊 Historique" }
   ];
   return `
@@ -73,6 +74,7 @@ const GAMES = [
   { name: "La bataille navale de la tribu", desc: "Les bateaux ça Margaux connaît, la destruction aussi, à toi de jouer", emoji: "🎯", route: "/naval" },
   { name: "Puissance 4 de la Tribu", desc: "Aligne 4 pions avant l'adversaire, en solo contre l'ordi ou en duel", emoji: "🔴", route: "/connect4" },
   { name: "Jeu des Paires de la Tribu", desc: "Retrouve toutes les paires de mémoire, seul ou en duel", emoji: "🎴", route: "/paires" },
+  { name: "Qui est-ce de la Tribu", desc: "Devine le personnage mystère de l'adversaire avant lui", emoji: "🕵️", route: "/guesswho" },
   { name: "Historique de la tribu", desc: "Tous les scores, tous les jeux confondus", emoji: "📊", route: "/historique" }
 ];
 
@@ -175,6 +177,22 @@ registerRoute("/paires", async (container) => {
   }
   const mod = await import("./games/paires.js");
   return mod.mountPaires(mount, { onChangeProfile: () => { navigate("/paires"); } });
+});
+
+/* ============ QUI EST-CE ============ */
+registerRoute("/guesswho", async (container) => {
+  container.innerHTML = topbarHtml("/guesswho") + `<div id="gameMount"></div>`;
+  renderProfileBadge();
+  const mount = container.querySelector("#gameMount");
+  if (!getActiveProfile()) {
+    await renderProfilePicker(mount, () => { renderProfileBadge(); navigate("/guesswho"); }, {
+      title: "Qui mène l'enquête ?",
+      subtitle: "Choisis ton profil — il restera actif pour tous les jeux."
+    });
+    return;
+  }
+  const mod = await import("./games/guesswho.js");
+  return mod.mountGuessWho(mount, { onChangeProfile: () => { navigate("/guesswho"); } });
 });
 
 registerRoute("__notfound__", null);
