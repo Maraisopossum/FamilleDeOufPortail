@@ -295,7 +295,7 @@ function renderConfigWarning(){
 function renderRoleSelect(){
   app.innerHTML = `
     <div class="card" style="text-align:center;padding:18px;">
-      <img src="./quiz-logo.png" alt="La Team Kahoot" style="width:100%;max-width:420px;border-radius:20px;">
+      <img src="./logos/quiz-logo.png" alt="La Team Kahoot" style="width:100%;max-width:420px;border-radius:20px;">
     </div>
     <div class="card">
       <h1 class="setup-title">Chacun son écran !</h1>

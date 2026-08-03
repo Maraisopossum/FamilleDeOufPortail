@@ -12,30 +12,30 @@ export const GAME_NAME = "Qui est-ce de la Tribu";
    ROSTER — 24 personnages, mêmes traits que GUESS_WHO.md
    ============================================================ */
 const CHARACTERS = [
-  { id:"leo",     name:"Léo",     gender:"H", hair:"brun",  length:"court", glasses:false, hat:false, facial:"barbe",     img:"guesswho-01-leo.png" },
-  { id:"nina",    name:"Nina",    gender:"F", hair:"blond", length:"long",  glasses:false, hat:false, facial:null,        img:"guesswho-02-nina.png" },
-  { id:"max",     name:"Max",     gender:"H", hair:"noir",  length:"court", glasses:true,  hat:false, facial:null,        img:"guesswho-03-max.png" },
-  { id:"zoe",     name:"Zoé",     gender:"F", hair:"roux",  length:"long",  glasses:true,  hat:false, facial:null,        img:"guesswho-04-zoe.png" },
-  { id:"tom",     name:"Tom",     gender:"H", hair:"chauve",length:null,    glasses:false, hat:false, facial:"moustache", img:"guesswho-05-tom.png" },
-  { id:"lea",     name:"Léa",     gender:"F", hair:"brun",  length:"court", glasses:false, hat:true,  facial:null,        img:"guesswho-06-lea.png" },
-  { id:"nathan",  name:"Nathan",  gender:"H", hair:"blond", length:"court", glasses:true,  hat:false, facial:null,        img:"guesswho-07-nathan.png" },
-  { id:"chloe",   name:"Chloé",   gender:"F", hair:"noir",  length:"long",  glasses:false, hat:false, facial:null,        img:"guesswho-08-chloe.png" },
-  { id:"hugo",    name:"Hugo",    gender:"H", hair:"gris",  length:"court", glasses:false, hat:true,  facial:"barbe",     img:"guesswho-09-hugo.png" },
-  { id:"emma",    name:"Emma",    gender:"F", hair:"blond", length:"court", glasses:true,  hat:false, facial:null,        img:"guesswho-10-emma.png" },
-  { id:"lucas",   name:"Lucas",   gender:"H", hair:"roux",  length:"court", glasses:false, hat:false, facial:null,        img:"guesswho-11-lucas.png" },
-  { id:"ines",    name:"Inès",    gender:"F", hair:"brun",  length:"long",  glasses:true,  hat:true,  facial:null,        img:"guesswho-12-ines.png" },
-  { id:"adam",    name:"Adam",    gender:"H", hair:"noir",  length:"long",  glasses:true,  hat:false, facial:"barbe",     img:"guesswho-13-adam.png" },
-  { id:"julie",   name:"Julie",   gender:"F", hair:"gris",  length:"court", glasses:false, hat:false, facial:null,        img:"guesswho-14-julie.png" },
-  { id:"sacha",   name:"Sacha",   gender:"H", hair:"chauve",length:null,    glasses:true,  hat:false, facial:"moustache", img:"guesswho-15-sacha.png" },
-  { id:"rose",    name:"Rose",    gender:"F", hair:"roux",  length:"court", glasses:false, hat:true,  facial:null,        img:"guesswho-16-rose.png" },
-  { id:"noah",    name:"Noah",    gender:"H", hair:"brun",  length:"long",  glasses:false, hat:false, facial:null,        img:"guesswho-17-noah.png" },
-  { id:"mia",     name:"Mia",     gender:"F", hair:"noir",  length:"long",  glasses:true,  hat:false, facial:null,        img:"guesswho-18-mia.png" },
-  { id:"gabriel", name:"Gabriel", gender:"H", hair:"blond", length:"court", glasses:false, hat:true,  facial:"barbe",     img:"guesswho-19-gabriel.png" },
-  { id:"alice",   name:"Alice",   gender:"F", hair:"brun",  length:"court", glasses:true,  hat:false, facial:null,        img:"guesswho-20-alice.png" },
-  { id:"ethan",   name:"Ethan",   gender:"H", hair:"gris",  length:"long",  glasses:false, hat:false, facial:"moustache", img:"guesswho-21-ethan.png" },
-  { id:"camille", name:"Camille", gender:"F", hair:"blond", length:"long",  glasses:false, hat:true,  facial:null,        img:"guesswho-22-camille.png" },
-  { id:"theo",    name:"Théo",    gender:"H", hair:"roux",  length:"court", glasses:true,  hat:false, facial:null,        img:"guesswho-23-theo.png" },
-  { id:"sarah",   name:"Sarah",   gender:"F", hair:"noir",  length:"court", glasses:false, hat:false, facial:null,        img:"guesswho-24-sarah.png" }
+  { id:"leo",     name:"Léo",     gender:"H", hair:"brun",  length:"court", glasses:false, hat:false, facial:"barbe",     img:"01-leo.png" },
+  { id:"nina",    name:"Nina",    gender:"F", hair:"blond", length:"long",  glasses:false, hat:false, facial:null,        img:"02-nina.png" },
+  { id:"max",     name:"Max",     gender:"H", hair:"noir",  length:"court", glasses:true,  hat:false, facial:null,        img:"03-max.png" },
+  { id:"zoe",     name:"Zoé",     gender:"F", hair:"roux",  length:"long",  glasses:true,  hat:false, facial:null,        img:"04-zoe.png" },
+  { id:"tom",     name:"Tom",     gender:"H", hair:"chauve",length:null,    glasses:false, hat:false, facial:"moustache", img:"05-tom.png" },
+  { id:"lea",     name:"Léa",     gender:"F", hair:"brun",  length:"court", glasses:false, hat:true,  facial:null,        img:"06-lea.png" },
+  { id:"nathan",  name:"Nathan",  gender:"H", hair:"blond", length:"court", glasses:true,  hat:false, facial:null,        img:"07-nathan.png" },
+  { id:"chloe",   name:"Chloé",   gender:"F", hair:"noir",  length:"long",  glasses:false, hat:false, facial:null,        img:"08-chloe.png" },
+  { id:"hugo",    name:"Hugo",    gender:"H", hair:"gris",  length:"court", glasses:false, hat:true,  facial:"barbe",     img:"09-hugo.png" },
+  { id:"emma",    name:"Emma",    gender:"F", hair:"blond", length:"court", glasses:true,  hat:false, facial:null,        img:"10-emma.png" },
+  { id:"lucas",   name:"Lucas",   gender:"H", hair:"roux",  length:"court", glasses:false, hat:false, facial:null,        img:"11-lucas.png" },
+  { id:"ines",    name:"Inès",    gender:"F", hair:"brun",  length:"long",  glasses:true,  hat:true,  facial:null,        img:"12-ines.png" },
+  { id:"adam",    name:"Adam",    gender:"H", hair:"noir",  length:"long",  glasses:true,  hat:false, facial:"barbe",     img:"13-adam.png" },
+  { id:"julie",   name:"Julie",   gender:"F", hair:"gris",  length:"court", glasses:false, hat:false, facial:null,        img:"14-julie.png" },
+  { id:"sacha",   name:"Sacha",   gender:"H", hair:"chauve",length:null,    glasses:true,  hat:false, facial:"moustache", img:"15-sacha.png" },
+  { id:"rose",    name:"Rose",    gender:"F", hair:"roux",  length:"court", glasses:false, hat:true,  facial:null,        img:"16-rose.png" },
+  { id:"noah",    name:"Noah",    gender:"H", hair:"brun",  length:"long",  glasses:false, hat:false, facial:null,        img:"17-noah.png" },
+  { id:"mia",     name:"Mia",     gender:"F", hair:"noir",  length:"long",  glasses:true,  hat:false, facial:null,        img:"18-mia.png" },
+  { id:"gabriel", name:"Gabriel", gender:"H", hair:"blond", length:"court", glasses:false, hat:true,  facial:"barbe",     img:"19-gabriel.png" },
+  { id:"alice",   name:"Alice",   gender:"F", hair:"brun",  length:"court", glasses:true,  hat:false, facial:null,        img:"20-alice.png" },
+  { id:"ethan",   name:"Ethan",   gender:"H", hair:"gris",  length:"long",  glasses:false, hat:false, facial:"moustache", img:"21-ethan.png" },
+  { id:"camille", name:"Camille", gender:"F", hair:"blond", length:"long",  glasses:false, hat:true,  facial:null,        img:"22-camille.png" },
+  { id:"theo",    name:"Théo",    gender:"H", hair:"roux",  length:"court", glasses:true,  hat:false, facial:null,        img:"23-theo.png" },
+  { id:"sarah",   name:"Sarah",   gender:"F", hair:"noir",  length:"court", glasses:false, hat:false, facial:null,        img:"24-sarah.png" }
 ];
 const TRAITS = [
   { id:"homme",    label:"Est un homme ?",              test:c => c.gender === "H" },
@@ -140,7 +140,7 @@ function randomCharId(excludeId){
 function cardHtml(c, eliminated){
   return '<div class="qw-card' + (eliminated ? " eliminated" : "") + '" data-char="' + c.id + '">' +
     '<div class="qw-portrait">' +
-      '<img src="./' + c.img + '" alt="' + escAttr(c.name) + '" onerror="this.parentElement.parentElement.classList.add(\'img-fallback\')">' +
+      '<img src="./guesswho-images/' + c.img + '" alt="' + escAttr(c.name) + '" onerror="this.parentElement.parentElement.classList.add(\'img-fallback\')">' +
       '<span class="qw-fallback">' + c.name.charAt(0) + '</span>' +
     '</div>' +
     '<div class="qw-name">' + escAttr(c.name) + '</div>' +
@@ -892,7 +892,7 @@ function shellHtml(){
 
     <section class="screen on" data-screen="mode">
       <div class="card" style="text-align:center;padding:18px;">
-        <img src="./guesswho-logo.png" alt="Qui est-ce de la Tribu" style="width:100%;max-width:420px;border-radius:20px;" onerror="this.style.display='none';">
+        <img src="./logos/guesswho-logo.png" alt="Qui est-ce de la Tribu" style="width:100%;max-width:420px;border-radius:20px;" onerror="this.style.display='none';">
       </div>
       <div class="card">
         <h2>Comment tu joues ?</h2>

@@ -717,7 +717,7 @@ function shellHtml(){
 
     <section class="screen on" data-screen="mode">
       <div class="card" style="text-align:center;padding:18px;">
-        <img src="./paire-logo.png" alt="Jeu des Paires de la Tribu" style="width:100%;max-width:420px;border-radius:20px;">
+        <img src="./logos/paire-logo.png" alt="Jeu des Paires de la Tribu" style="width:100%;max-width:420px;border-radius:20px;">
       </div>
       <div class="card">
         <h2>Comment tu joues ?</h2>

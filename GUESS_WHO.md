@@ -142,7 +142,7 @@ Génère les 24 dans **la même conversation ChatGPT**, à la suite, pour
 maximiser la cohérence de style d'une image à l'autre. Enregistre chaque
 image sous le nom indiqué.
 
-**Fichier : `guesswho-01-leo.png`**
+**Fichier : `guesswho-images/01-leo.png`**
 > Génère une image carrée de 1024x1024 pixels. Portrait cartoon plat en
 > illustration vectorielle, cadrage tête et épaules, fond uni lavande
 > pastel (#E8DFF5), style familial et chaleureux pour un jeu de société,
@@ -150,7 +150,7 @@ image sous le nom indiqué.
 > Personnage : Léo, homme adulte, cheveux bruns courts, barbe courte, pas
 > de lunettes, expression souriante.
 
-**Fichier : `guesswho-02-nina.png`**
+**Fichier : `guesswho-images/02-nina.png`**
 > Génère une image carrée de 1024x1024 pixels. Portrait cartoon plat en
 > illustration vectorielle, cadrage tête et épaules, fond uni lavande
 > pastel (#E8DFF5), style familial et chaleureux pour un jeu de société,
@@ -158,7 +158,7 @@ image sous le nom indiqué.
 > Personnage : Nina, femme adulte, cheveux blonds longs et ondulés, pas de
 > lunettes, expression joyeuse.
 
-**Fichier : `guesswho-03-max.png`**
+**Fichier : `guesswho-images/03-max.png`**
 > Génère une image carrée de 1024x1024 pixels. Portrait cartoon plat en
 > illustration vectorielle, cadrage tête et épaules, fond uni lavande
 > pastel (#E8DFF5), style familial et chaleureux pour un jeu de société,
@@ -166,7 +166,7 @@ image sous le nom indiqué.
 > Personnage : Max, homme adulte, cheveux noirs courts, lunettes rondes,
 > visage rasé de près.
 
-**Fichier : `guesswho-04-zoe.png`**
+**Fichier : `guesswho-images/04-zoe.png`**
 > Génère une image carrée de 1024x1024 pixels. Portrait cartoon plat en
 > illustration vectorielle, cadrage tête et épaules, fond uni lavande
 > pastel (#E8DFF5), style familial et chaleureux pour un jeu de société,
@@ -174,7 +174,7 @@ image sous le nom indiqué.
 > Personnage : Zoé, femme adulte, cheveux roux longs, lunettes carrées,
 > sourire chaleureux.
 
-**Fichier : `guesswho-05-tom.png`**
+**Fichier : `guesswho-images/05-tom.png`**
 > Génère une image carrée de 1024x1024 pixels. Portrait cartoon plat en
 > illustration vectorielle, cadrage tête et épaules, fond uni lavande
 > pastel (#E8DFF5), style familial et chaleureux pour un jeu de société,
@@ -182,7 +182,7 @@ image sous le nom indiqué.
 > Personnage : Tom, homme chauve, moustache fine, pas de lunettes,
 > expression malicieuse.
 
-**Fichier : `guesswho-06-lea.png`**
+**Fichier : `guesswho-images/06-lea.png`**
 > Génère une image carrée de 1024x1024 pixels. Portrait cartoon plat en
 > illustration vectorielle, cadrage tête et épaules, fond uni lavande
 > pastel (#E8DFF5), style familial et chaleureux pour un jeu de société,
@@ -190,7 +190,7 @@ image sous le nom indiqué.
 > Personnage : Léa, femme adulte, cheveux bruns courts au carré, porte un
 > petit béret, pas de lunettes.
 
-**Fichier : `guesswho-07-nathan.png`**
+**Fichier : `guesswho-images/07-nathan.png`**
 > Génère une image carrée de 1024x1024 pixels. Portrait cartoon plat en
 > illustration vectorielle, cadrage tête et épaules, fond uni lavande
 > pastel (#E8DFF5), style familial et chaleureux pour un jeu de société,
@@ -198,7 +198,7 @@ image sous le nom indiqué.
 > Personnage : Nathan, jeune homme, cheveux blonds courts, lunettes, visage
 > rasé de près.
 
-**Fichier : `guesswho-08-chloe.png`**
+**Fichier : `guesswho-images/08-chloe.png`**
 > Génère une image carrée de 1024x1024 pixels. Portrait cartoon plat en
 > illustration vectorielle, cadrage tête et épaules, fond uni lavande
 > pastel (#E8DFF5), style familial et chaleureux pour un jeu de société,
@@ -206,7 +206,7 @@ image sous le nom indiqué.
 > Personnage : Chloé, femme adulte, cheveux noirs longs et lisses, pas de
 > lunettes, expression douce.
 
-**Fichier : `guesswho-09-hugo.png`**
+**Fichier : `guesswho-images/09-hugo.png`**
 > Génère une image carrée de 1024x1024 pixels. Portrait cartoon plat en
 > illustration vectorielle, cadrage tête et épaules, fond uni lavande
 > pastel (#E8DFF5), style familial et chaleureux pour un jeu de société,
@@ -214,7 +214,7 @@ image sous le nom indiqué.
 > Personnage : Hugo, homme âgé, cheveux gris courts, barbe grise, porte une
 > casquette, pas de lunettes.
 
-**Fichier : `guesswho-10-emma.png`**
+**Fichier : `guesswho-images/10-emma.png`**
 > Génère une image carrée de 1024x1024 pixels. Portrait cartoon plat en
 > illustration vectorielle, cadrage tête et épaules, fond uni lavande
 > pastel (#E8DFF5), style familial et chaleureux pour un jeu de société,
@@ -222,7 +222,7 @@ image sous le nom indiqué.
 > Personnage : Emma, jeune femme, cheveux blonds courts, lunettes rondes
 > colorées, sourire éclatant.
 
-**Fichier : `guesswho-11-lucas.png`**
+**Fichier : `guesswho-images/11-lucas.png`**
 > Génère une image carrée de 1024x1024 pixels. Portrait cartoon plat en
 > illustration vectorielle, cadrage tête et épaules, fond uni lavande
 > pastel (#E8DFF5), style familial et chaleureux pour un jeu de société,
@@ -230,7 +230,7 @@ image sous le nom indiqué.
 > Personnage : Lucas, homme adulte, cheveux roux courts, visage rasé, pas
 > de lunettes.
 
-**Fichier : `guesswho-12-ines.png`**
+**Fichier : `guesswho-images/12-ines.png`**
 > Génère une image carrée de 1024x1024 pixels. Portrait cartoon plat en
 > illustration vectorielle, cadrage tête et épaules, fond uni lavande
 > pastel (#E8DFF5), style familial et chaleureux pour un jeu de société,
@@ -238,7 +238,7 @@ image sous le nom indiqué.
 > Personnage : Inès, femme adulte, cheveux bruns longs, lunettes, porte un
 > chapeau à large bord.
 
-**Fichier : `guesswho-13-adam.png`**
+**Fichier : `guesswho-images/13-adam.png`**
 > Génère une image carrée de 1024x1024 pixels. Portrait cartoon plat en
 > illustration vectorielle, cadrage tête et épaules, fond uni lavande
 > pastel (#E8DFF5), style familial et chaleureux pour un jeu de société,
@@ -246,7 +246,7 @@ image sous le nom indiqué.
 > Personnage : Adam, homme adulte, cheveux noirs longs attachés, barbe
 > fournie, lunettes.
 
-**Fichier : `guesswho-14-julie.png`**
+**Fichier : `guesswho-images/14-julie.png`**
 > Génère une image carrée de 1024x1024 pixels. Portrait cartoon plat en
 > illustration vectorielle, cadrage tête et épaules, fond uni lavande
 > pastel (#E8DFF5), style familial et chaleureux pour un jeu de société,
@@ -254,7 +254,7 @@ image sous le nom indiqué.
 > Personnage : Julie, femme d'âge mûr, cheveux gris courts, pas de
 > lunettes, expression sereine.
 
-**Fichier : `guesswho-15-sacha.png`**
+**Fichier : `guesswho-images/15-sacha.png`**
 > Génère une image carrée de 1024x1024 pixels. Portrait cartoon plat en
 > illustration vectorielle, cadrage tête et épaules, fond uni lavande
 > pastel (#E8DFF5), style familial et chaleureux pour un jeu de société,
@@ -262,7 +262,7 @@ image sous le nom indiqué.
 > Personnage : Sacha, homme chauve, moustache, lunettes de soleil relevées
 > sur le front.
 
-**Fichier : `guesswho-16-rose.png`**
+**Fichier : `guesswho-images/16-rose.png`**
 > Génère une image carrée de 1024x1024 pixels. Portrait cartoon plat en
 > illustration vectorielle, cadrage tête et épaules, fond uni lavande
 > pastel (#E8DFF5), style familial et chaleureux pour un jeu de société,
@@ -270,7 +270,7 @@ image sous le nom indiqué.
 > Personnage : Rose, femme adulte, cheveux roux courts bouclés, porte un
 > chapeau de paille, pas de lunettes.
 
-**Fichier : `guesswho-17-noah.png`**
+**Fichier : `guesswho-images/17-noah.png`**
 > Génère une image carrée de 1024x1024 pixels. Portrait cartoon plat en
 > illustration vectorielle, cadrage tête et épaules, fond uni lavande
 > pastel (#E8DFF5), style familial et chaleureux pour un jeu de société,
@@ -278,14 +278,14 @@ image sous le nom indiqué.
 > Personnage : Noah, homme adulte, cheveux bruns longs, visage rasé, pas de
 > lunettes.
 
-**Fichier : `guesswho-18-mia.png`**
+**Fichier : `guesswho-images/18-mia.png`**
 > Génère une image carrée de 1024x1024 pixels. Portrait cartoon plat en
 > illustration vectorielle, cadrage tête et épaules, fond uni lavande
 > pastel (#E8DFF5), style familial et chaleureux pour un jeu de société,
 > couleurs vives, traits épais et propres, sans texte ni watermark.
 > Personnage : Mia, femme adulte, cheveux noirs longs, lunettes papillon.
 
-**Fichier : `guesswho-19-gabriel.png`**
+**Fichier : `guesswho-images/19-gabriel.png`**
 > Génère une image carrée de 1024x1024 pixels. Portrait cartoon plat en
 > illustration vectorielle, cadrage tête et épaules, fond uni lavande
 > pastel (#E8DFF5), style familial et chaleureux pour un jeu de société,
@@ -293,7 +293,7 @@ image sous le nom indiqué.
 > Personnage : Gabriel, homme adulte, cheveux blonds courts, barbe courte,
 > porte une casquette, pas de lunettes.
 
-**Fichier : `guesswho-20-alice.png`**
+**Fichier : `guesswho-images/20-alice.png`**
 > Génère une image carrée de 1024x1024 pixels. Portrait cartoon plat en
 > illustration vectorielle, cadrage tête et épaules, fond uni lavande
 > pastel (#E8DFF5), style familial et chaleureux pour un jeu de société,
@@ -301,7 +301,7 @@ image sous le nom indiqué.
 > Personnage : Alice, femme adulte, cheveux bruns courts, lunettes rondes,
 > sourire discret.
 
-**Fichier : `guesswho-21-ethan.png`**
+**Fichier : `guesswho-images/21-ethan.png`**
 > Génère une image carrée de 1024x1024 pixels. Portrait cartoon plat en
 > illustration vectorielle, cadrage tête et épaules, fond uni lavande
 > pastel (#E8DFF5), style familial et chaleureux pour un jeu de société,
@@ -309,7 +309,7 @@ image sous le nom indiqué.
 > Personnage : Ethan, homme d'âge mûr, cheveux gris longs, moustache, pas
 > de lunettes.
 
-**Fichier : `guesswho-22-camille.png`**
+**Fichier : `guesswho-images/22-camille.png`**
 > Génère une image carrée de 1024x1024 pixels. Portrait cartoon plat en
 > illustration vectorielle, cadrage tête et épaules, fond uni lavande
 > pastel (#E8DFF5), style familial et chaleureux pour un jeu de société,
@@ -317,7 +317,7 @@ image sous le nom indiqué.
 > Personnage : Camille, femme adulte, cheveux blonds longs, porte un
 > chapeau élégant, pas de lunettes.
 
-**Fichier : `guesswho-23-theo.png`**
+**Fichier : `guesswho-images/23-theo.png`**
 > Génère une image carrée de 1024x1024 pixels. Portrait cartoon plat en
 > illustration vectorielle, cadrage tête et épaules, fond uni lavande
 > pastel (#E8DFF5), style familial et chaleureux pour un jeu de société,
@@ -325,7 +325,7 @@ image sous le nom indiqué.
 > Personnage : Théo, jeune homme, cheveux roux courts, lunettes, visage
 > rasé de près.
 
-**Fichier : `guesswho-24-sarah.png`**
+**Fichier : `guesswho-images/24-sarah.png`**
 > Génère une image carrée de 1024x1024 pixels. Portrait cartoon plat en
 > illustration vectorielle, cadrage tête et épaules, fond uni lavande
 > pastel (#E8DFF5), style familial et chaleureux pour un jeu de société,
@@ -333,12 +333,17 @@ image sous le nom indiqué.
 > Personnage : Sarah, femme adulte, cheveux noirs courts, pas de lunettes,
 > sourire éclatant.
 
-## Une fois les 24 images générées
+## Où déposer les 24 images
 
-Dépose les 24 fichiers dans le dossier du repo (n'importe où, je les
-déplacerai) avec les noms indiqués ci-dessus — je m'occupe ensuite
-d'implémenter `games/guesswho.js`, la table Supabase, la route et
-l'intégration au portail.
+Dans le dossier **`guesswho-images/`** à la racine du repo (à côté de
+`games/`, `shared/`), avec le nom exact indiqué au-dessus de chaque prompt
+(ex: `guesswho-images/01-leo.png`). Le jeu va déjà chercher les images à cet
+endroit — dès qu'un fichier est déposé avec le bon nom, il remplace
+automatiquement le repli sur l'initiale du prénom, sans toucher au code.
+
+Un logo pour l'écran d'accueil est aussi supporté, optionnel :
+`logos/guesswho-logo.png` (comme les autres logos, tous regroupés dans ce
+dossier).
 
 ## Décisions verrouillées
 
