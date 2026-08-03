@@ -982,12 +982,18 @@ function paintFoeReveal(){
     const key = k(+c.dataset.x, +c.dataset.y);
     const emoji = cells.get(key);
     const shot = S.myShots[key]; // tes tirs sur ce plateau : "miss" | "hit" | "sunk"
-    if(shot){
-      c.className = "c " + shot;
-      c.textContent = shot === "miss" ? "•" : "✕";
+    if(shot === "miss"){
+      // Un raté ne peut tomber que sur une case sans navire.
+      c.className = "c miss";
+      c.textContent = "•";
+    }else if(emoji){
+      // Touché, coulé, ou jamais visé : le navire reste visible, la couleur
+      // de fond indique en plus s'il a été touché.
+      c.className = "c has-ship" + (shot ? " " + shot : "");
+      c.innerHTML = '<span class="ship-emoji">' + emoji + '</span>';
     }else{
-      c.className = "c" + (emoji ? " has-ship" : "");
-      c.innerHTML = emoji ? '<span class="ship-emoji">' + emoji + '</span>' : "";
+      c.className = "c";
+      c.innerHTML = "";
     }
   });
 }
