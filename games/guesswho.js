@@ -110,7 +110,20 @@ if (!document.getElementById("guesswho-styles")) {
   .qw-reveal.no .big{color:var(--coral);text-shadow:0 0 24px rgba(255,93,115,.6);}
   .qw-reveal .small{color:#ffd7dd;font-size:15px;max-width:85%;}
   .qw-reveal .qw-reveal-hint{color:var(--muted);font-size:13px;}
+  .qw-reveal .result{font-family:'Baloo 2',cursive;font-weight:900;font-size:clamp(30px,9vw,52px);letter-spacing:1px;text-align:center;}
+  .qw-reveal.yes .result{color:var(--teal);text-shadow:0 0 24px rgba(61,220,151,.6);}
+  .qw-reveal.no .result{color:var(--coral);text-shadow:0 0 24px rgba(255,93,115,.6);}
   @keyframes qw-pop{from{opacity:0;transform:scale(.8);}to{opacity:1;transform:scale(1);}}
+  .qw-confirm{position:fixed;inset:0;background:rgba(10,6,20,.86);z-index:85;display:flex;align-items:center;justify-content:center;padding:20px;animation:qw-pop .2s ease;}
+  .qw-confirm-card{background:var(--panel);border-radius:24px;padding:28px 24px;max-width:340px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+  .qw-confirm-portrait{position:relative;width:120px;height:120px;border-radius:50%;overflow:hidden;margin:0 auto 16px;background:var(--bg);border:3px solid var(--gold);}
+  .qw-confirm-portrait img{width:100%;height:100%;object-fit:cover;display:block;}
+  .qw-confirm-portrait .qw-fallback{display:none;width:100%;height:100%;align-items:center;justify-content:center;font-family:'Baloo 2',cursive;font-weight:800;font-size:44px;color:var(--gold);}
+  .qw-confirm-portrait.img-fallback img{display:none;}
+  .qw-confirm-portrait.img-fallback .qw-fallback{display:flex;}
+  .qw-confirm-q{font-size:16px;line-height:1.5;margin-bottom:22px;}
+  .qw-confirm-actions{display:flex;flex-direction:column;gap:10px;}
+  .qw-confirm-error{background:rgba(255,93,115,.15);border:1px solid var(--coral);color:#ffd7dd;border-radius:14px;padding:12px 14px;font-size:14px;line-height:1.45;margin-bottom:20px;}
   .guesswho-screen .qw-mychar{display:flex;justify-content:center;margin-bottom:10px;}
   .guesswho-screen .qw-mychar-chip{display:flex;align-items:center;gap:14px;background:var(--panel-light);border:2px solid var(--gold);border-radius:999px;padding:6px 22px 6px 6px;font-size:16px;box-shadow:0 2px 10px rgba(0,0,0,.25);}
   .guesswho-screen .qw-mychar-chip .qw-portrait{position:relative;width:76px;height:76px;border-radius:50%;overflow:hidden;background:var(--bg);flex-shrink:0;}
@@ -854,36 +867,112 @@ function showAnswerOverlay(traitLabel, answer, note){
   setTimeout(() => overlay.remove(), 3200);
 }
 
-async function accuse(charId){
-  S.accusing = false;
+function accuse(charId){
   const char = charById(charId);
-  if(!confirm("Tu penses que le personnage mystère est " + char.name + " ?")) { paintGame(); return; }
+  if(!char) return;
+  showAccuseConfirm(char, () => resolveAccusation(charId));
+}
+
+function showAccuseConfirm(char, onConfirm){
+  const overlay = document.createElement("div");
+  overlay.className = "qw-confirm";
+  overlay.innerHTML =
+    '<div class="qw-confirm-card">' +
+      '<div class="qw-confirm-portrait">' +
+        '<img src="./guesswho-images/' + char.img + '" alt="' + escAttr(char.name) + '" onerror="this.parentElement.classList.add(\'img-fallback\')">' +
+        '<span class="qw-fallback">' + char.name.charAt(0) + '</span>' +
+      '</div>' +
+      '<div class="qw-confirm-q">Tu penses que le personnage mystère est <b>' + escAttr(char.name) + '</b> ?</div>' +
+      '<div class="qw-confirm-actions">' +
+        '<button class="btn btn-gold" id="qwConfirmYes">🎯 J\'accuse</button>' +
+        '<button class="btn btn-ghost" id="qwConfirmNo">Annuler</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  overlay.querySelector("#qwConfirmYes").addEventListener("click", () => { overlay.remove(); onConfirm(); });
+  overlay.querySelector("#qwConfirmNo").addEventListener("click", () => overlay.remove());
+}
+
+function showAccuseError(charId){
+  const overlay = document.createElement("div");
+  overlay.className = "qw-confirm";
+  overlay.innerHTML =
+    '<div class="qw-confirm-card">' +
+      '<div class="qw-confirm-error">Impossible d\'envoyer ton accusation (problème de connexion). Réessaie.</div>' +
+      '<div class="qw-confirm-actions">' +
+        '<button class="btn btn-gold" id="qwRetryYes">🔁 Réessayer</button>' +
+        '<button class="btn btn-ghost" id="qwRetryNo">Annuler</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  overlay.querySelector("#qwRetryYes").addEventListener("click", () => { overlay.remove(); resolveAccusation(charId); });
+  overlay.querySelector("#qwRetryNo").addEventListener("click", () => { overlay.remove(); paintGame(); });
+}
+
+function showResultOverlay(won, charName, onDismiss){
+  won ? SFX.win() : SFX.lose();
+  const overlay = document.createElement("div");
+  overlay.className = "qw-reveal " + (won ? "yes" : "no");
+  overlay.innerHTML =
+    '<div class="qw-reveal-q">' + escAttr(charName) + '</div>' +
+    '<div class="result">' + (won ? "GAGNÉ ! 🏆" : "RATÉ !") + '</div>' +
+    '<div class="qw-reveal-hint">Touche l\'écran pour continuer</div>';
+  let done = false;
+  const finishOverlay = () => { if(done) return; done = true; overlay.remove(); onDismiss(); };
+  overlay.addEventListener("click", finishOverlay);
+  document.body.appendChild(overlay);
+  setTimeout(finishOverlay, 3200);
+}
+
+async function resolveAccusation(charId){
+  S.accusing = false;
+  paintGame();
+  const char = charById(charId);
   if(S.mode === "solo"){
     if(charId === S.foeTarget){
-      S.over = true; SFX.win(); finish(true);
+      showResultOverlay(true, char.name, () => { S.over = true; finish(true); });
     }else{
       S.eliminated = S.eliminated.concat([charId]);
-      logMessage("Raté ! Ce n'était pas " + char.name + ".");
-      S.turn = "ai";
-      paintGame();
-      setTimeout(aiTurn, 600);
+      showResultOverlay(false, char.name, () => {
+        logMessage("Raté ! Ce n'était pas " + char.name + ".");
+        S.turn = "ai";
+        paintGame();
+        setTimeout(aiTurn, 600);
+      });
     }
     return;
   }
-  const r = await roomLoad(S.code).catch(()=>null);
-  if(!r) return;
+  let r;
+  try{
+    r = await roomLoad(S.code);
+    if(!r) throw new Error("salon introuvable");
+  }catch(e){
+    showAccuseError(charId);
+    return;
+  }
   const foeTargetId = S.role === "host" ? r.guest_target : r.host_target;
   if(charId === foeTargetId){
-    try{ await roomPatch(S.code, { status:"finished", winner:S.profile.name }); }catch(e){}
-    S.over = true; SFX.win();
-    finish(true);
+    try{
+      await roomPatch(S.code, { status:"finished", winner:S.profile.name });
+    }catch(e){
+      showAccuseError(charId);
+      return;
+    }
+    showResultOverlay(true, char.name, () => { S.over = true; finish(true); });
   }else{
     const skipField = S.role === "host" ? "host_skip" : "guest_skip";
     const nextTurn = S.role === "host" ? "guest" : "host";
-    try{ await roomPatch(S.code, { [skipField]: true, turn: nextTurn }); }catch(e){}
+    try{
+      await roomPatch(S.code, { [skipField]: true, turn: nextTurn });
+    }catch(e){
+      showAccuseError(charId);
+      return;
+    }
     S.turn = nextTurn;
-    logMessage("Raté ! Ce n'était pas " + char.name + ". Tour suivant passé.");
-    paintGame();
+    showResultOverlay(false, char.name, () => {
+      logMessage("Raté ! Ce n'était pas " + char.name + ". Tour suivant passé.");
+      paintGame();
+    });
   }
 }
 
