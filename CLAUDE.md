@@ -168,6 +168,18 @@ the old cached version indefinitely (this is the #1 source of "I fixed it
 but it's not showing up" confusion during development — see the
 disable-while-testing note above).
 
+`index.html` listens for `controllerchange` and auto-reloads once a new SW
+takes control, so most users only need a single normal reload after a
+deploy. But a browser that's still running the *old* SW (from before this
+auto-reload code existed) won't have that listener yet — its one manual
+reload only gets as far as activating the new SW, and a second reload is
+needed to actually see new content. If a family member reports "I cleared
+my cache and it's still old", remember that clearing "cached images and
+files" in most browsers does **not** unregister service workers or clear
+Cache Storage — they need to clear "cookies and site data" for the domain,
+or use DevTools → Application → Service Workers → Unregister, or fully
+close and reopen an installed PWA (sometimes twice).
+
 ### Assets
 
 - `logos/` — one illustrated banner logo per game plus the portal

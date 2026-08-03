@@ -2,7 +2,7 @@
    Règle d'or : on ne met en cache QUE la coquille statique.
    Tout ce qui touche Supabase (données dynamiques) passe toujours par le réseau. */
 
-const CACHE = "jeux-famille-shell-v13";
+const CACHE = "jeux-famille-shell-v14";
 const SHELL = [
   "./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png",
   "./logos/logo.png", "./logos/quiz-logo.png", "./logos/naval-logo.png", "./logos/puissance4-logo.png", "./logos/paire-logo.png",
@@ -11,7 +11,11 @@ const SHELL = [
 ];
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL).catch(() => {})).then(() => self.skipWaiting()));
+  e.waitUntil(
+    caches.open(CACHE)
+      .then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: "reload" }))).catch(() => {}))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener("activate", (e) => {
