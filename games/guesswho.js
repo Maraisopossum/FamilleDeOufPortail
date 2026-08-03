@@ -104,6 +104,10 @@ if (!document.getElementById("guesswho-styles")) {
   .guesswho-screen .qw-mytho .big{font-family:'Baloo 2',cursive;font-weight:900;font-size:clamp(48px,14vw,90px);color:var(--coral);text-shadow:0 0 24px rgba(255,93,115,.7);letter-spacing:2px;}
   .guesswho-screen .qw-mytho .small{color:var(--text);font-size:16px;text-align:center;padding:0 20px;}
   @keyframes qw-pop{from{opacity:0;transform:scale(.8);}to{opacity:1;transform:scale(1);}}
+  .guesswho-screen .qw-mychar{display:flex;justify-content:center;margin-bottom:10px;}
+  .guesswho-screen .qw-mychar-chip{display:flex;align-items:center;gap:8px;background:var(--panel-light);border:2px solid rgba(255,200,87,.35);border-radius:999px;padding:4px 14px 4px 4px;font-size:13px;}
+  .guesswho-screen .qw-mychar-chip .qw-portrait{width:32px;height:32px;border-radius:50%;overflow:hidden;}
+  .guesswho-screen .qw-mychar-chip .qw-fallback{font-size:14px;}
   .guesswho-screen .qw-answer-q{font-family:'Baloo 2',cursive;font-weight:800;font-size:clamp(22px,6vw,32px);text-align:center;margin:18px 0 26px;}
   .guesswho-screen .qw-yn{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
   .guesswho-screen .qw-yn button{font-family:'Baloo 2',cursive;font-weight:800;font-size:24px;padding:26px;border-radius:20px;border:none;cursor:pointer;}
@@ -136,6 +140,17 @@ function ago(iso){
 function randomCharId(excludeId){
   const pool = excludeId ? CHARACTERS.filter(c => c.id !== excludeId) : CHARACTERS;
   return pool[Math.floor(Math.random()*pool.length)].id;
+}
+function myCharChipHtml(charId){
+  const c = charById(charId);
+  if(!c) return "";
+  return '<div class="qw-mychar-chip" title="Ton personnage secret">' +
+    '<div class="qw-portrait">' +
+      '<img src="./guesswho-images/' + c.img + '" alt="' + escAttr(c.name) + '" onerror="this.parentElement.parentElement.classList.add(\'img-fallback\')">' +
+      '<span class="qw-fallback">' + c.name.charAt(0) + '</span>' +
+    '</div>' +
+    '<span>Toi : <b>' + escAttr(c.name) + '</b></span>' +
+  '</div>';
 }
 function cardHtml(c, eliminated){
   return '<div class="qw-card' + (eliminated ? " eliminated" : "") + '" data-char="' + c.id + '">' +
@@ -301,26 +316,16 @@ function startSolo(){
    ÉCRAN "CHOISIS TON PERSONNAGE"
    ============================================================ */
 let pickCallback = null;
-let pickExcludeId = null;
-function showCharacterPicker(forWhomText, onPicked, excludeId){
+function showCharacterPicker(forWhomText, onPicked){
   pickCallback = onPicked;
-  pickExcludeId = excludeId || null;
   $("#pickForWhom").textContent = forWhomText || "l'adversaire";
-  $("#qwPickBoard").innerHTML = CHARACTERS.map(c => {
-    if(c.id === pickExcludeId){
-      return '<div class="qw-card eliminated" title="Déjà pris par l\'hôte">' +
-        '<div class="qw-portrait"><img src="./guesswho-images/' + c.img + '" alt="' + escAttr(c.name) + '" onerror="this.parentElement.parentElement.classList.add(\'img-fallback\')"><span class="qw-fallback">' + c.name.charAt(0) + '</span></div>' +
-        '<div class="qw-name">' + escAttr(c.name) + '</div></div>';
-    }
-    return cardHtml(c, false);
-  }).join("");
+  $("#qwPickBoard").innerHTML = CHARACTERS.map(c => cardHtml(c, false)).join("");
   show("pick");
 }
 function bindPickScreen(){
   $("#qwPickBoard").addEventListener("click", (e) => {
     const card = e.target.closest(".qw-card");
     if(!card || !pickCallback || card.dataset.char === undefined) return;
-    if(card.dataset.char === pickExcludeId) return;
     const char = charById(card.dataset.char);
     if(!char) return;
     if(!confirm("Tu choisis " + char.name + " comme personnage mystère ?")) return;
@@ -541,7 +546,7 @@ async function joinRoom(code){
       S.over = false; S.ended = false;
       joinRoomChannel(code);
       startGame();
-    }, r.host_target);
+    });
   }catch(e){
     $("#multiErr").hidden = false;
     $("#multiErr").textContent = e.message === "plein"
@@ -672,6 +677,8 @@ function paintGame(){
   const board = $("#qwBoard");
   if(!board) return;
   $("#foeName").textContent = S.mode === "solo" ? S.foe : (S.foe || "adversaire à venir");
+  const myCharBox = $("#qwMyChar");
+  if(myCharBox) myCharBox.innerHTML = myCharChipHtml(S.myTarget);
   board.innerHTML = CHARACTERS.map(c => cardHtml(c, S.eliminated.includes(c.id))).join("");
   board.classList.toggle("accuse-mode", S.accusing);
   $$("#qwBoard .qw-card").forEach(el => el.classList.toggle("accusable", S.accusing));
@@ -768,6 +775,8 @@ async function askTrait(traitId){
 function showAnswerScreen(traitId){
   const trait = traitById(traitId);
   $("#qwAnswerQuestion").textContent = trait.label;
+  const myCharBox = $("#qwAnswerMyChar");
+  if(myCharBox) myCharBox.innerHTML = myCharChipHtml(S.myTarget);
   show("answer");
   const yesBtn = $("#btnYes"), noBtn = $("#btnNo");
   yesBtn.onclick = () => submitAnswer(traitId, true);
@@ -986,6 +995,7 @@ function shellHtml(){
       <div class="card">
         <div class="turnbar theirs" id="turnBar">…</div>
         <p class="lead center" style="margin-bottom:8px;">Face à <b id="foeName">…</b></p>
+        <div class="qw-mychar" id="qwMyChar"></div>
         <div class="qw-board" id="qwBoard"></div>
         <div class="qw-traits" id="qwTraits"></div>
         <div class="btn-row" style="justify-content:center;margin-top:16px">
@@ -998,6 +1008,7 @@ function shellHtml(){
 
     <section class="screen" data-screen="answer">
       <div class="card center">
+        <div class="qw-mychar" id="qwAnswerMyChar"></div>
         <p class="lead">On te demande :</p>
         <div class="qw-answer-q" id="qwAnswerQuestion">…</div>
         <div class="qw-yn">
