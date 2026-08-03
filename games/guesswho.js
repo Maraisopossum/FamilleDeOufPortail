@@ -105,10 +105,10 @@ if (!document.getElementById("guesswho-styles")) {
   .guesswho-screen .qw-mytho .small{color:var(--text);font-size:16px;text-align:center;padding:0 20px;}
   @keyframes qw-pop{from{opacity:0;transform:scale(.8);}to{opacity:1;transform:scale(1);}}
   .guesswho-screen .qw-mychar{display:flex;justify-content:center;margin-bottom:10px;}
-  .guesswho-screen .qw-mychar-chip{display:flex;align-items:center;gap:10px;background:var(--panel-light);border:2px solid var(--gold);border-radius:999px;padding:4px 16px 4px 4px;font-size:14px;box-shadow:0 2px 10px rgba(0,0,0,.25);}
-  .guesswho-screen .qw-mychar-chip .qw-portrait{position:relative;width:44px;height:44px;border-radius:50%;overflow:hidden;background:var(--bg);flex-shrink:0;}
+  .guesswho-screen .qw-mychar-chip{display:flex;align-items:center;gap:14px;background:var(--panel-light);border:2px solid var(--gold);border-radius:999px;padding:6px 22px 6px 6px;font-size:16px;box-shadow:0 2px 10px rgba(0,0,0,.25);}
+  .guesswho-screen .qw-mychar-chip .qw-portrait{position:relative;width:76px;height:76px;border-radius:50%;overflow:hidden;background:var(--bg);flex-shrink:0;}
   .guesswho-screen .qw-mychar-chip .qw-portrait img{width:100%;height:100%;object-fit:cover;display:block;}
-  .guesswho-screen .qw-mychar-chip .qw-fallback{display:none;width:100%;height:100%;align-items:center;justify-content:center;font-family:'Baloo 2',cursive;font-weight:800;font-size:18px;color:var(--gold);}
+  .guesswho-screen .qw-mychar-chip .qw-fallback{display:none;width:100%;height:100%;align-items:center;justify-content:center;font-family:'Baloo 2',cursive;font-weight:800;font-size:30px;color:var(--gold);}
   .guesswho-screen .qw-mychar-chip.img-fallback img{display:none;}
   .guesswho-screen .qw-mychar-chip.img-fallback .qw-fallback{display:flex;}
   .guesswho-screen .qw-answer-q{font-family:'Baloo 2',cursive;font-weight:800;font-size:clamp(22px,6vw,32px);text-align:center;margin:18px 0 26px;}
