@@ -979,9 +979,16 @@ function paintFoeReveal(){
   const cells = new Map();
   ships.forEach(s => (s.cells || []).forEach(c => cells.set(k(c[0],c[1]), s.emoji)));
   $$("#foeRevealGrid .c").forEach(c => {
-    const emoji = cells.get(k(+c.dataset.x, +c.dataset.y));
-    c.className = "c" + (emoji ? " has-ship" : "");
-    c.innerHTML = emoji ? '<span class="ship-emoji">' + emoji + '</span>' : "";
+    const key = k(+c.dataset.x, +c.dataset.y);
+    const emoji = cells.get(key);
+    const shot = S.myShots[key]; // tes tirs sur ce plateau : "miss" | "hit" | "sunk"
+    if(shot){
+      c.className = "c " + shot;
+      c.textContent = shot === "miss" ? "•" : "✕";
+    }else{
+      c.className = "c" + (emoji ? " has-ship" : "");
+      c.innerHTML = emoji ? '<span class="ship-emoji">' + emoji + '</span>' : "";
+    }
   });
 }
 function bindEndScreen(){
@@ -1144,7 +1151,8 @@ function shellHtml(){
         </div>
         <div class="status ok" id="saveMsg" hidden></div>
         <div id="foeRevealBox" class="hidden" style="margin-top:22px;">
-          <h3 style="margin:0 0 10px;font-size:15px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;">La flotte de <span id="foeRevealName">l'adversaire</span></h3>
+          <h3 style="margin:0 0 4px;font-size:15px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;">La flotte de <span id="foeRevealName">l'adversaire</span></h3>
+          <p class="lead" style="font-size:12px;margin:0 0 10px;">Tes tirs : ✕ touché · • manqué · case vide = jamais visée</p>
           <div class="grid-shell small" style="margin:0 auto;"><div class="grid" id="foeRevealGrid"></div></div>
         </div>
         <div class="btn-row" style="justify-content:center;margin-top:20px">
