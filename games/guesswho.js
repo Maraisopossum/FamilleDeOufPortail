@@ -100,9 +100,16 @@ if (!document.getElementById("guesswho-styles")) {
   .guesswho-screen .qw-trait-btn{background:var(--panel-light);border:2px solid rgba(255,200,87,.35);border-radius:14px;padding:11px 10px;font-family:'Inter',sans-serif;font-weight:600;font-size:13px;color:var(--text);cursor:pointer;text-align:left;transition:border-color .15s ease;}
   .guesswho-screen .qw-trait-btn:hover{border-color:var(--gold);}
   .guesswho-screen .qw-trait-btn:disabled{opacity:.35;cursor:default;}
-  .guesswho-screen .qw-mytho{position:fixed;inset:0;background:rgba(20,4,10,.88);z-index:80;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;animation:qw-pop .25s ease;}
-  .guesswho-screen .qw-mytho .big{font-family:'Baloo 2',cursive;font-weight:900;font-size:clamp(48px,14vw,90px);color:var(--coral);text-shadow:0 0 24px rgba(255,93,115,.7);letter-spacing:2px;}
-  .guesswho-screen .qw-mytho .small{color:var(--text);font-size:16px;text-align:center;padding:0 20px;}
+  .qw-mytho{position:fixed;inset:0;background:rgba(20,4,10,.88);z-index:80;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;animation:qw-pop .25s ease;}
+  .qw-mytho .big{font-family:'Baloo 2',cursive;font-weight:900;font-size:clamp(48px,14vw,90px);color:var(--coral);text-shadow:0 0 24px rgba(255,93,115,.7);letter-spacing:2px;}
+  .qw-mytho .small{color:var(--text);font-size:16px;text-align:center;padding:0 20px;}
+  .qw-reveal{position:fixed;inset:0;background:rgba(10,6,20,.86);z-index:80;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px;text-align:center;animation:qw-pop .25s ease;cursor:pointer;}
+  .qw-reveal .qw-reveal-q{font-family:'Baloo 2',cursive;font-weight:700;font-size:clamp(18px,5vw,26px);color:var(--text);max-width:90%;}
+  .qw-reveal .big{font-family:'Baloo 2',cursive;font-weight:900;font-size:clamp(56px,18vw,110px);letter-spacing:2px;}
+  .qw-reveal.yes .big{color:var(--teal);text-shadow:0 0 24px rgba(61,220,151,.6);}
+  .qw-reveal.no .big{color:var(--coral);text-shadow:0 0 24px rgba(255,93,115,.6);}
+  .qw-reveal .small{color:#ffd7dd;font-size:15px;max-width:85%;}
+  .qw-reveal .qw-reveal-hint{color:var(--muted);font-size:13px;}
   @keyframes qw-pop{from{opacity:0;transform:scale(.8);}to{opacity:1;transform:scale(1);}}
   .guesswho-screen .qw-mychar{display:flex;justify-content:center;margin-bottom:10px;}
   .guesswho-screen .qw-mychar-chip{display:flex;align-items:center;gap:14px;background:var(--panel-light);border:2px solid var(--gold);border-radius:999px;padding:6px 22px 6px 6px;font-size:16px;box-shadow:0 2px 10px rgba(0,0,0,.25);}
@@ -764,7 +771,7 @@ async function askTrait(traitId){
     const foeChar = charById(S.foeTarget);
     const answer = trait.test(foeChar);
     logMessage('Tu demandes : "' + trait.label + '" → <b>' + (answer ? "Oui" : "Non") + '</b>. À toi d\'éliminer les personnages qui ne correspondent plus.');
-    answer ? SFX.yes() : SFX.no();
+    showAnswerOverlay(trait.label, answer);
     S.turn = "ai";
     paintGame();
     setTimeout(aiTurn, 600);
@@ -817,9 +824,11 @@ function reactToAnswer(a, isMine){
     showMytho(trait.label);
   }else if(a.wasLie && a.askedBy === S.role){
     logMessage('🚩 <b>' + escAttr(S.foe || "L\'adversaire") + ' a menti !</b> La vraie réponse à "' + trait.label + '" est <b>' + (a.truth ? "Oui" : "Non") + '</b>. À toi d\'éliminer les personnages qui ne correspondent plus.');
+    showAnswerOverlay(trait.label, a.truth, '🚩 ' + escAttr(S.foe || "L'adversaire") + ' avait répondu ' + (a.answer ? "Oui" : "Non") + ' — c\'est faux !');
     paintGame();
   }else if(a.askedBy === S.role){
     logMessage('"' + trait.label + '" → <b>' + (a.answer ? "Oui" : "Non") + '</b>. À toi d\'éliminer les personnages qui ne correspondent plus.');
+    showAnswerOverlay(trait.label, a.answer);
     paintGame();
   }
 }
@@ -830,6 +839,19 @@ function showMytho(traitLabel){
   overlay.innerHTML = '<div class="big">MYTHO ! 🤥</div><div class="small">Tu as menti sur : ' + escAttr(traitLabel) + '</div>';
   document.body.appendChild(overlay);
   setTimeout(() => overlay.remove(), 2600);
+}
+function showAnswerOverlay(traitLabel, answer, note){
+  answer ? SFX.yes() : SFX.no();
+  const overlay = document.createElement("div");
+  overlay.className = "qw-reveal " + (answer ? "yes" : "no");
+  overlay.innerHTML =
+    '<div class="qw-reveal-q">' + escAttr(traitLabel) + '</div>' +
+    '<div class="big">' + (answer ? "OUI" : "NON") + '</div>' +
+    (note ? '<div class="small">' + note + '</div>' : '') +
+    '<div class="qw-reveal-hint">Touche l\'écran pour continuer</div>';
+  overlay.addEventListener("click", () => overlay.remove());
+  document.body.appendChild(overlay);
+  setTimeout(() => overlay.remove(), 3200);
 }
 
 async function accuse(charId){
